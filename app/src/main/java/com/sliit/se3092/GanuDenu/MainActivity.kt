@@ -1,47 +1,31 @@
-package com.sliit.se3092.ganudenu
+package com.sliit.se3092.GanuDenu
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.sliit.se3092.ganudenu.ui.theme.GanuDenuTheme
+import androidx.navigation.compose.rememberNavController
+import com.sliit.se3092.GanuDenu.ui.navigation.AppNavHost
+import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             GanuDenuTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val navController = rememberNavController()
+                AppNavHost(navController = navController)
             }
         }
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
+fun MainAppPreview() {
     GanuDenuTheme {
-        Greeting("Android")
+        val navController = rememberNavController()
+        AppNavHost(navController = navController)
     }
 }
