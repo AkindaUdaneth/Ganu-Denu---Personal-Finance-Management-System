@@ -357,7 +357,7 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
 }
 
 @Composable
-private fun GanuDenuBottomNavBar() {
+fun GanuDenuBottomNavBar() {
     NavigationBar(
         containerColor = Color(0xFF121214),
         contentColor = Color.LightGray

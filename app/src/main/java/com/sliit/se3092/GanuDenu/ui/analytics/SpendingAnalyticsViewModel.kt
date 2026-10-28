@@ -1,4 +1,4 @@
-package com.sliit.se3092.ganudenu.ui.analytics
+package com.sliit.se3092.GanuDenu.ui.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

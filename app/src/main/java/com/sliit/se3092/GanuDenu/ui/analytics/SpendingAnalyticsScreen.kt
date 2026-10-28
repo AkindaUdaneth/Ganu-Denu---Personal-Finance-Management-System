@@ -1,4 +1,4 @@
-package com.sliit.se3092.ganudenu.ui.analytics
+package com.sliit.se3092.GanuDenu.ui.analytics
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import com.sliit.se3092.GanuDenu.ui.dashboard.GanuDenuBottomNavBar
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
@@ -33,17 +34,26 @@ private val SurfaceDark = Color(0xFF18181B)
 fun SpendingAnalyticsScreen(viewModel: SpendingAnalyticsViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Surface(modifier = Modifier.fillMaxSize(), color = ThemeBlack) {
-        when (val state = uiState) {
-            is SpendingAnalyticsUiState.Loading -> {
-                Box(contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = ThemeYellow)
+    Scaffold(
+        bottomBar = { GanuDenuBottomNavBar() },
+        containerColor = ThemeBlack
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when (val state = uiState) {
+                is SpendingAnalyticsUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = ThemeYellow)
+                    }
                 }
+                is SpendingAnalyticsUiState.Success -> {
+                    AnalyticsContent(state)
+                }
+                is SpendingAnalyticsUiState.Error -> {}
             }
-            is SpendingAnalyticsUiState.Success -> {
-                AnalyticsContent(state)
-            }
-            is SpendingAnalyticsUiState.Error -> {}
         }
     }
 }
@@ -243,5 +253,17 @@ private fun AnalyticsPreview() {
             ExpenseCategory("Gym", 2500.0, 0xFF27272A)
         )
     )
-    AnalyticsContent(state = mockState)
+
+    Scaffold(
+        bottomBar = { GanuDenuBottomNavBar() },
+        containerColor = ThemeBlack
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            AnalyticsContent(state = mockState)
+        }
+    }
 }

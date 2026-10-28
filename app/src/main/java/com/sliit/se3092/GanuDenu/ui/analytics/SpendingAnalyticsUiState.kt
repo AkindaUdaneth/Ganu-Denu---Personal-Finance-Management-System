@@ -1,4 +1,4 @@
-package com.sliit.se3092.ganudenu.ui.analytics
+package com.sliit.se3092.GanuDenu.ui.analytics
 
 data class ExpenseCategory(
     val name: String,
