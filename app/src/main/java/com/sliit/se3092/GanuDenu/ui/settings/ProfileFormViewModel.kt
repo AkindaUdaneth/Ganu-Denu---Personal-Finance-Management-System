@@ -39,4 +39,8 @@ class ProfileFormViewModel : ViewModel() {
     fun dismissSnackbar() {
         _uiState.update { it.copy(showSuccessSnackbar = false) }
     }
+
+    fun updatePhotoBottomSheetVisibility(isVisible: Boolean) {
+        _uiState.update { it.copy(showPhotoBottomSheet = isVisible) }
+    }
 }
