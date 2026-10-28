@@ -17,6 +17,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.NumberFormat
 import java.util.Locale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.sliit.se3092.ganudenu.R
+import androidx.compose.foundation.BorderStroke
 
 // Theme Colors
 private val ThemeBlack = Color(0xFF000000)
@@ -70,17 +74,27 @@ private fun DashboardContent(state: DashboardUiState.Success) {
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
-            // Logo placeholder
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(ThemeYellow, RoundedCornerShape(16.dp))
+            Image(
+                painter = painterResource(id = R.drawable.ganu_denu_logo),
+                contentDescription = "Ganu Denu Logo",
+                modifier = Modifier.size(32.dp)
             )
         }
 
         CurrentBalanceCard(
             confirmed = state.confirmedBalance,
             estimated = state.estimatedIncome
+        )
+
+        BehavioralSplitCard(
+            committed = state.committedSpent,
+            discretionary = state.discretionarySpent
+        )
+
+        GoalProgressCard(
+            currentSaved = state.goalCurrentSaved,
+            targetAmount = state.goalTargetAmount,
+            requiredMonthly = state.requiredMonthlySavings
         )
     }
 }
@@ -138,6 +152,117 @@ private fun CurrentBalanceCard(confirmed: Double, estimated: Double) {
                     Text(text = "Estimated", color = ThemeYellow, fontSize = 12.sp)
                     Text(text = "LKR ${format.format(estimated)}", color = ThemeYellow, fontWeight = FontWeight.Bold)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BehavioralSplitCard(committed: Double, discretionary: Double) {
+    // Calculate the percentage of the total for each category
+    val total = committed + discretionary
+    val committedWeight = if (total > 0) (committed / total).toFloat() else 0.5f
+    val discretionaryWeight = if (total > 0) (discretionary / total).toFloat() else 0.5f
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Where it went this month",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .background(Color(0xFF27272A), RoundedCornerShape(20.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(committedWeight)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Committed", color = Color.White, fontSize = 14.sp)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(discretionaryWeight)
+                        .fillMaxHeight()
+                        .background(ThemeYellow, RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Discretionary",
+                        color = ThemeBlack,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, requiredMonthly: Double) {
+    val format = NumberFormat.getNumberInstance(Locale.US)
+    val progress = if (targetAmount > 0) (currentSaved / targetAmount).toFloat() else 0f
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF141416)),
+        border = BorderStroke(1.dp, ThemeYellow),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "MacBook Pro M4 Goal",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "LKR ${format.format(currentSaved)} / LKR ${format.format(targetAmount)}",
+                color = Color.LightGray,
+                fontSize = 14.sp
+            )
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
+                color = ThemeYellow,
+                trackColor = BorderGray,
+            )
+
+            Row {
+                Text(
+                    text = "Required monthly savings: ",
+                    color = Color.LightGray,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = "LKR ${format.format(requiredMonthly)}",
+                    color = ThemeYellow,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
