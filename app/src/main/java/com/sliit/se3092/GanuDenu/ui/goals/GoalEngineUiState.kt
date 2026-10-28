@@ -1,4 +1,4 @@
-package com.sliit.se3092.ganudenu.ui.goals
+package com.sliit.se3092.GanuDenu.ui.goals
 
 sealed interface GoalEngineUiState {
     data object Loading : GoalEngineUiState
