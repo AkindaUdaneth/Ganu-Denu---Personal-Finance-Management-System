@@ -38,7 +38,7 @@ private val DangerRed = Color(0xFFEF4444)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileFormScreen(viewModel: ProfileFormViewModel) {
+fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit = {}) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState()
@@ -84,7 +84,8 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel) {
                 onNewPasswordChange = viewModel::updateNewPassword,
                 onConfirmPasswordChange = viewModel::updateConfirmPassword,
                 onSaveClick = viewModel::saveProfile,
-                onChangePhotoClick = { viewModel.updatePhotoBottomSheetVisibility(true) }
+                onChangePhotoClick = { viewModel.updatePhotoBottomSheetVisibility(true) },
+                onCloseClick = onCloseClick
             )
 
             if (state.showPhotoBottomSheet) {
@@ -111,7 +112,8 @@ private fun ProfileFormContent(
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
     onSaveClick: () -> Unit,
-    onChangePhotoClick: () -> Unit
+    onChangePhotoClick: () -> Unit,
+    onCloseClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -121,8 +123,10 @@ private fun ProfileFormContent(
     ) {
         // Top App Bar
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
-            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = onCloseClick) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(text = "Edit Profile", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
@@ -291,15 +295,7 @@ private fun ProfileFormPreview() {
 
     Scaffold(containerColor = ThemeBlack) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            ProfileFormContent(
-                state = mockState,
-                onNameChange = {},
-                onEmailChange = {},
-                onNewPasswordChange = {},
-                onConfirmPasswordChange = {},
-                onSaveClick = {},
-                onChangePhotoClick = {}
-            )
+            ProfileFormContent(mockState, {}, {}, {}, {}, {}, {}, {})
         }
     }
 }

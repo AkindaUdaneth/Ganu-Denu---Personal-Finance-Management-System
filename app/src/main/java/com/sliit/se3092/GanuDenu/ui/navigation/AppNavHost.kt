@@ -24,63 +24,95 @@ import com.sliit.se3092.GanuDenu.ui.settings.ProfileFormScreen
 import com.sliit.se3092.GanuDenu.ui.settings.ProfileFormViewModel
 import com.sliit.se3092.GanuDenu.ui.settings.SettingsScreen
 import com.sliit.se3092.GanuDenu.ui.settings.SettingsViewModel
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Dashboard.route,
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Only display the Bottom Navigation on main anchor screens
+    val showBottomNav = currentRoute in listOf(
+        Screen.Dashboard.route,
+        Screen.GoalEngine.route,
+        Screen.Analytics.route,
+        Screen.Settings.route
+    )
+
+    Scaffold(
+        bottomBar = {
+            if (showBottomNav) {
+                GanuDenuBottomNavBar(navController = navController)
+            }
+        },
+        containerColor = Color(0xFF000000),
         modifier = modifier
-    ) {
-        // --- Completed UI Screens ---
-        composable(Screen.Dashboard.route) {
-            val viewModel: DashboardViewModel = viewModel()
-            DashboardScreen(viewModel = viewModel)
-        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Dashboard.route,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            // --- Completed UI Screens ---
+            composable(Screen.Dashboard.route) {
+                val viewModel: DashboardViewModel = viewModel()
+                DashboardScreen(
+                    viewModel = viewModel,
+                    onGoalClick = { navController.navigate(Screen.GoalEngine.route) },
+                    onAnalyticsClick = { navController.navigate(Screen.Analytics.route) },
+                    onSettingsClick = { navController.navigate(Screen.Settings.route) }
+                )
+            }
+            composable(Screen.Analytics.route) {
+                val viewModel: SpendingAnalyticsViewModel = viewModel()
+                SpendingAnalyticsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.GoalEngine.route) {
+                val viewModel: GoalEngineViewModel = viewModel()
+                GoalEngineScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onEditClick = { navController.navigate(Screen.GoalForm.route) }
+                )
+            }
+            composable(Screen.Settings.route) {
+                val viewModel: SettingsViewModel = viewModel()
+                SettingsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onEditProfileClick = { navController.navigate(Screen.ProfileForm.route) }
+                )
+            }
+            composable(Screen.GoalForm.route) {
+                val viewModel: GoalFormViewModel = viewModel()
+                GoalFormScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.ProfileForm.route) {
+                val viewModel: ProfileFormViewModel = viewModel()
+                ProfileFormScreen(
+                    viewModel = viewModel,
+                    onCloseClick = { navController.popBackStack() }
+                )
+            }
 
-        composable(Screen.Analytics.route) {
-            val viewModel: SpendingAnalyticsViewModel = viewModel()
-            SpendingAnalyticsScreen(viewModel = viewModel)
-        }
-
-        composable(Screen.GoalEngine.route) {
-            val viewModel: GoalEngineViewModel = viewModel()
-            GoalEngineScreen(viewModel = viewModel)
-        }
-
-        composable(Screen.Settings.route) {
-            val viewModel: SettingsViewModel = viewModel()
-            SettingsScreen(viewModel = viewModel)
-        }
-
-        composable(Screen.GoalForm.route) {
-            val viewModel: GoalFormViewModel = viewModel()
-            GoalFormScreen(viewModel = viewModel)
-        }
-
-        composable(Screen.ProfileForm.route) {
-            val viewModel: ProfileFormViewModel = viewModel()
-            ProfileFormScreen(viewModel = viewModel)
-        }
-
-        // --- Original Placeholder Screens ---
-        composable(Screen.QuickExpense.route) {
-            PlaceholderScreen(title = "Quick Expense Log")
-        }
-        composable(Screen.CatchUp.route) {
-            PlaceholderScreen(title = "Catch-Up Mode")
-        }
-        composable(Screen.RecurringManager.route) {
-            PlaceholderScreen(title = "Recurring & Subscriptions")
-        }
-        composable(Screen.IncomeHub.route) {
-            PlaceholderScreen(title = "Income Hub")
-        }
-        composable(Screen.GoalDetail.route) {
-            PlaceholderScreen(title = "MacBook Goal Detail")
+            // --- Original Placeholder Screens ---
+            composable(Screen.QuickExpense.route) { PlaceholderScreen(title = "Quick Expense Log") }
+            composable(Screen.CatchUp.route) { PlaceholderScreen(title = "Catch-Up Mode") }
+            composable(Screen.RecurringManager.route) { PlaceholderScreen(title = "Recurring & Subscriptions") }
+            composable(Screen.IncomeHub.route) { PlaceholderScreen(title = "Income Hub") }
+            composable(Screen.GoalDetail.route) { PlaceholderScreen(title = "MacBook Goal Detail") }
         }
     }
 }

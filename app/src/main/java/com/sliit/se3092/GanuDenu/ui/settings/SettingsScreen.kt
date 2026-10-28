@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sliit.se3092.GanuDenu.ui.dashboard.GanuDenuBottomNavBar
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
@@ -28,11 +27,14 @@ private val BorderGray = Color(0xFF3F3F46)
 private val DangerRed = Color(0xFFEF4444)
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onBackClick: () -> Unit = {},
+    onEditProfileClick: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
         containerColor = ThemeBlack
     ) { paddingValues ->
         Box(
@@ -51,7 +53,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         state = state,
                         onToggleNotifications = viewModel::toggleNotifications,
                         onShowLogoutDialog = { viewModel.updateLogoutDialogVisibility(true) },
-                        onShowDeleteDialog = { viewModel.updateDeleteDialogVisibility(true) }
+                        onShowDeleteDialog = { viewModel.updateDeleteDialogVisibility(true) },
+                        onBackClick = onBackClick,
+                        onEditProfileClick = onEditProfileClick
                     )
 
                     if (state.showLogoutDialog) {
@@ -79,7 +83,9 @@ private fun SettingsContent(
     state: SettingsUiState.Success,
     onToggleNotifications: (Boolean) -> Unit,
     onShowLogoutDialog: () -> Unit,
-    onShowDeleteDialog: () -> Unit
+    onShowDeleteDialog: () -> Unit,
+    onBackClick: () -> Unit,
+    onEditProfileClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -89,8 +95,10 @@ private fun SettingsContent(
     ) {
         // Top App Bar
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(text = "Settings", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
@@ -126,7 +134,7 @@ private fun SettingsContent(
                     Text(text = state.userEmail, color = Color.LightGray, fontSize = 12.sp)
                 }
                 OutlinedButton(
-                    onClick = { },
+                    onClick = onEditProfileClick,
                     border = BorderStroke(1.dp, ThemeYellow),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = ThemeYellow),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
@@ -145,7 +153,6 @@ private fun SettingsContent(
             shape = RoundedCornerShape(12.dp)
         ) {
             Column {
-                // Notifications Toggle
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -271,21 +278,9 @@ private fun SettingsPreview() {
         showDeleteDialog = true
     )
 
-    Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
-        containerColor = ThemeBlack
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            SettingsContent(
-                state = mockState,
-                onToggleNotifications = {},
-                onShowLogoutDialog = {},
-                onShowDeleteDialog = {}
-            )
+    Scaffold(containerColor = ThemeBlack) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            SettingsContent(mockState, {}, {}, {}, {}, {})
         }
     }
 }

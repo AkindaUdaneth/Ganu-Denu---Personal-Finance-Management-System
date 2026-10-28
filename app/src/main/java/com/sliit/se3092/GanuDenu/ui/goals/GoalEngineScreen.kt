@@ -22,7 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sliit.se3092.GanuDenu.ui.dashboard.GanuDenuBottomNavBar
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -33,11 +32,14 @@ private val BorderGray = Color(0xFF3F3F46)
 private val DangerRed = Color(0xFFEF4444)
 
 @Composable
-fun GoalEngineScreen(viewModel: GoalEngineViewModel) {
+fun GoalEngineScreen(
+    viewModel: GoalEngineViewModel,
+    onBackClick: () -> Unit = {},
+    onEditClick: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
         containerColor = ThemeBlack
     ) { paddingValues ->
         Box(
@@ -52,7 +54,12 @@ fun GoalEngineScreen(viewModel: GoalEngineViewModel) {
                     }
                 }
                 is GoalEngineUiState.Success -> {
-                    GoalEngineContent(state = state, onImpulseChanged = viewModel::onImpulseExpenseChanged)
+                    GoalEngineContent(
+                        state = state,
+                        onImpulseChanged = viewModel::onImpulseExpenseChanged,
+                        onBackClick = onBackClick,
+                        onEditClick = onEditClick
+                    )
                 }
                 is GoalEngineUiState.Error -> {}
             }
@@ -61,7 +68,12 @@ fun GoalEngineScreen(viewModel: GoalEngineViewModel) {
 }
 
 @Composable
-private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged: (String) -> Unit) {
+private fun GoalEngineContent(
+    state: GoalEngineUiState.Success,
+    onImpulseChanged: (String) -> Unit,
+    onBackClick: () -> Unit,
+    onEditClick: () -> Unit
+) {
     val format = NumberFormat.getNumberInstance(Locale.US)
 
     Column(
@@ -78,14 +90,16 @@ private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                Spacer(modifier = Modifier.width(16.dp))
+                IconButton(onClick = onBackClick) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(text = state.goalName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
             }
             OutlinedButton(
-                onClick = { },
+                onClick = onEditClick,
                 border = BorderStroke(1.dp, ThemeYellow),
-                shape = RoundedCornerShape(50), // Pill shape matching Figma
+                shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = ThemeYellow),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                 modifier = Modifier.height(32.dp)
@@ -107,7 +121,7 @@ private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged
                     startAngle = -90f,
                     sweepAngle = 360f,
                     useCenter = false,
-                    style = Stroke(width = 32.dp.toPx(), cap = StrokeCap.Butt) // Flat caps matching Figma
+                    style = Stroke(width = 32.dp.toPx(), cap = StrokeCap.Butt)
                 )
                 drawArc(
                     color = ThemeYellow,
@@ -141,7 +155,7 @@ private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(text = "Target Date", color = Color.LightGray, fontSize = 12.sp)
+                Text("Target Date", color = Color.LightGray, fontSize = 12.sp)
 
                 Box(
                     modifier = Modifier
@@ -149,7 +163,7 @@ private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged
                         .background(ThemeBlack, RoundedCornerShape(8.dp))
                         .padding(12.dp)
                 ) {
-                    Text(text = "${state.targetDateMonths} Months", color = Color.White, fontSize = 16.sp)
+                    Text("${state.targetDateMonths} Months", color = Color.White, fontSize = 16.sp)
                 }
 
                 Text(
@@ -161,7 +175,7 @@ private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged
             }
         }
 
-        // Impulse Checker (Behavioral Impact Simulator)
+        // Impulse Checker
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SurfaceDark),
@@ -173,8 +187,8 @@ private fun GoalEngineContent(state: GoalEngineUiState.Success, onImpulseChanged
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Column {
-                    Text(text = "Impulse Checker", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Text(text = "What if I spend this?", color = Color.LightGray, fontSize = 14.sp)
+                    Text("Impulse Checker", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("What if I spend this?", color = Color.LightGray, fontSize = 14.sp)
                 }
 
                 OutlinedTextField(
@@ -225,16 +239,9 @@ private fun GoalEnginePreview() {
         impulseDelayDays = 18
     )
 
-    Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
-        containerColor = ThemeBlack
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            GoalEngineContent(state = mockState, onImpulseChanged = {})
+    Scaffold(containerColor = ThemeBlack) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            GoalEngineContent(mockState, {}, {}, {})
         }
     }
 }

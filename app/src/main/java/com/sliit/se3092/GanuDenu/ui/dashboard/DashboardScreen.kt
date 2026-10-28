@@ -2,6 +2,7 @@ package com.sliit.se3092.GanuDenu.ui.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -26,10 +27,6 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Settings
 
 // Theme Colors
 private val ThemeBlack = Color(0xFF000000)
@@ -38,11 +35,15 @@ private val ThemeYellow = Color(0xFFFFEF00)
 private val BorderGray = Color(0xFF3F3F46)
 
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel) {
+fun DashboardScreen(
+    viewModel: DashboardViewModel,
+    onGoalClick: () -> Unit = {},
+    onAnalyticsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
         containerColor = ThemeBlack
     ) { paddingValues ->
         Box(
@@ -57,21 +58,27 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
                     }
                 }
                 is DashboardUiState.Success -> {
-                    DashboardContent(state)
+                    DashboardContent(
+                        state = state,
+                        onGoalClick = onGoalClick,
+                        onAnalyticsClick = onAnalyticsClick,
+                        onSettingsClick = onSettingsClick
+                    )
                 }
-                is DashboardUiState.Error -> {
-                    // To be implemented
-                }
-                is DashboardUiState.Empty -> {
-                    // To be implemented
-                }
+                is DashboardUiState.Error -> {}
+                is DashboardUiState.Empty -> {}
             }
         }
     }
 }
 
 @Composable
-private fun DashboardContent(state: DashboardUiState.Success) {
+private fun DashboardContent(
+    state: DashboardUiState.Success,
+    onGoalClick: () -> Unit,
+    onAnalyticsClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -91,8 +98,10 @@ private fun DashboardContent(state: DashboardUiState.Success) {
             )
             Image(
                 painter = painterResource(id = R.drawable.ganu_denu_logo),
-                contentDescription = "Ganu Denu Logo",
-                modifier = Modifier.size(32.dp)
+                contentDescription = "Settings",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable { onSettingsClick() }
             )
         }
 
@@ -103,13 +112,15 @@ private fun DashboardContent(state: DashboardUiState.Success) {
 
         BehavioralSplitCard(
             committed = state.committedSpent,
-            discretionary = state.discretionarySpent
+            discretionary = state.discretionarySpent,
+            onAnalyticsClick = onAnalyticsClick
         )
 
         GoalProgressCard(
             currentSaved = state.goalCurrentSaved,
             targetAmount = state.goalTargetAmount,
-            requiredMonthly = state.requiredMonthlySavings
+            requiredMonthly = state.requiredMonthlySavings,
+            onGoalClick = onGoalClick
         )
 
         ActiveSubscriptionsCard(
@@ -132,44 +143,33 @@ private fun CurrentBalanceCard(confirmed: Double, estimated: Double) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Column {
-                Text(
-                    text = "Current Balance",
-                    color = Color.LightGray,
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = "LKR ${format.format(confirmed)}",
-                    color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Current Balance", color = Color.LightGray, fontSize = 14.sp)
+                Text("LKR ${format.format(confirmed)}", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Confirmed Box
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .border(1.dp, BorderGray, RoundedCornerShape(8.dp))
                         .padding(12.dp)
                 ) {
-                    Text(text = "Confirmed", color = Color.LightGray, fontSize = 12.sp)
-                    Text(text = "LKR ${format.format(confirmed)}", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Confirmed", color = Color.LightGray, fontSize = 12.sp)
+                    Text("LKR ${format.format(confirmed)}", color = Color.White, fontWeight = FontWeight.Bold)
                 }
 
-                // Estimated Box
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .background(Color(0xFF141416), RoundedCornerShape(8.dp))
-                        .border(1.dp, ThemeYellow, RoundedCornerShape(8.dp)) // Dashed border requires custom drawing, using solid for MVP
+                        .border(1.dp, ThemeYellow, RoundedCornerShape(8.dp))
                         .padding(12.dp)
                 ) {
-                    Text(text = "Estimated", color = ThemeYellow, fontSize = 12.sp)
-                    Text(text = "LKR ${format.format(estimated)}", color = ThemeYellow, fontWeight = FontWeight.Bold)
+                    Text("Estimated", color = ThemeYellow, fontSize = 12.sp)
+                    Text("LKR ${format.format(estimated)}", color = ThemeYellow, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -177,8 +177,7 @@ private fun CurrentBalanceCard(confirmed: Double, estimated: Double) {
 }
 
 @Composable
-private fun BehavioralSplitCard(committed: Double, discretionary: Double) {
-    // Calculate the percentage of the total for each category
+private fun BehavioralSplitCard(committed: Double, discretionary: Double, onAnalyticsClick: () -> Unit) {
     val total = committed + discretionary
     val committedWeight = if (total > 0) (committed / total).toFloat() else 0.5f
     val discretionaryWeight = if (total > 0) (discretionary / total).toFloat() else 0.5f
@@ -192,12 +191,7 @@ private fun BehavioralSplitCard(committed: Double, discretionary: Double) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Where it went this month",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text("Where it went this month", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
 
             Row(
                 modifier = Modifier
@@ -211,22 +205,18 @@ private fun BehavioralSplitCard(committed: Double, discretionary: Double) {
                         .fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Committed", color = Color.White, fontSize = 14.sp)
+                    Text("Committed", color = Color.White, fontSize = 14.sp)
                 }
 
                 Box(
                     modifier = Modifier
                         .weight(discretionaryWeight)
                         .fillMaxHeight()
-                        .background(ThemeYellow, RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp)),
+                        .background(ThemeYellow, RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
+                        .clickable { onAnalyticsClick() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Discretionary",
-                        color = ThemeBlack,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text("Discretionary", color = ThemeBlack, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -234,12 +224,14 @@ private fun BehavioralSplitCard(committed: Double, discretionary: Double) {
 }
 
 @Composable
-private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, requiredMonthly: Double) {
+private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, requiredMonthly: Double, onGoalClick: () -> Unit) {
     val format = NumberFormat.getNumberInstance(Locale.US)
     val progress = if (targetAmount > 0) (currentSaved / targetAmount).toFloat() else 0f
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onGoalClick() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF141416)),
         border = BorderStroke(1.dp, ThemeYellow),
         shape = RoundedCornerShape(12.dp)
@@ -248,18 +240,8 @@ private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, require
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "MacBook Pro M4 Goal",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "LKR ${format.format(currentSaved)} / LKR ${format.format(targetAmount)}",
-                color = Color.LightGray,
-                fontSize = 14.sp
-            )
+            Text("MacBook Pro M4 Goal", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("LKR ${format.format(currentSaved)} / LKR ${format.format(targetAmount)}", color = Color.LightGray, fontSize = 14.sp)
 
             LinearProgressIndicator(
                 progress = { progress },
@@ -271,17 +253,8 @@ private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, require
             )
 
             Row {
-                Text(
-                    text = "Required monthly savings: ",
-                    color = Color.LightGray,
-                    fontSize = 12.sp
-                )
-                Text(
-                    text = "LKR ${format.format(requiredMonthly)}",
-                    color = ThemeYellow,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Required monthly savings: ", color = Color.LightGray, fontSize = 12.sp)
+                Text("LKR ${format.format(requiredMonthly)}", color = ThemeYellow, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -300,12 +273,7 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "Active Subscriptions",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text("Active Subscriptions", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
 
             subscriptions.forEach { sub ->
                 Row(
@@ -315,7 +283,6 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Icon Circle
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -328,74 +295,16 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
                             "TRANSPORT" -> Icons.Default.DirectionsCar
                             else -> Icons.Default.Receipt
                         }
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = sub.name,
-                            tint = ThemeBlack,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(icon, contentDescription = sub.name, tint = ThemeBlack, modifier = Modifier.size(18.dp))
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    Text(
-                        text = sub.name,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Text(
-                        text = "LKR ${format.format(sub.costPerMonth)}/mo",
-                        color = Color.LightGray,
-                        fontSize = 12.sp
-                    )
+                    Text(sub.name, color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    Text("LKR ${format.format(sub.costPerMonth)}/mo", color = Color.LightGray, fontSize = 12.sp)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun GanuDenuBottomNavBar() {
-    NavigationBar(
-        containerColor = Color(0xFF121214),
-        contentColor = Color.LightGray
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
-            label = { Text("Dashboard") },
-            selected = true,
-            onClick = { },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ThemeBlack,
-                selectedTextColor = ThemeYellow,
-                indicatorColor = ThemeYellow,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.ArrowDownward, contentDescription = "Income") },
-            label = { Text("Income") },
-            selected = false,
-            onClick = { },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray)
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.ArrowUpward, contentDescription = "Expenses") },
-            label = { Text("Expenses") },
-            selected = false,
-            onClick = { },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray)
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") },
-            selected = false,
-            onClick = { },
-            colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray)
-        )
     }
 }
 
@@ -417,16 +326,9 @@ private fun DashboardPreview() {
         )
     )
 
-    Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
-        containerColor = ThemeBlack
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            DashboardContent(state = mockState)
+    Scaffold(containerColor = ThemeBlack) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            DashboardContent(mockState, {}, {}, {})
         }
     }
 }

@@ -24,18 +24,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import com.sliit.se3092.GanuDenu.ui.dashboard.GanuDenuBottomNavBar
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
 private val SurfaceDark = Color(0xFF18181B)
 
 @Composable
-fun SpendingAnalyticsScreen(viewModel: SpendingAnalyticsViewModel) {
+fun SpendingAnalyticsScreen(viewModel: SpendingAnalyticsViewModel, onBackClick: () -> Unit = {}) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
         containerColor = ThemeBlack
     ) { paddingValues ->
         Box(
@@ -50,7 +48,7 @@ fun SpendingAnalyticsScreen(viewModel: SpendingAnalyticsViewModel) {
                     }
                 }
                 is SpendingAnalyticsUiState.Success -> {
-                    AnalyticsContent(state)
+                    AnalyticsContent(state = state, onBackClick = onBackClick)
                 }
                 is SpendingAnalyticsUiState.Error -> {}
             }
@@ -59,7 +57,7 @@ fun SpendingAnalyticsScreen(viewModel: SpendingAnalyticsViewModel) {
 }
 
 @Composable
-private fun AnalyticsContent(state: SpendingAnalyticsUiState.Success) {
+private fun AnalyticsContent(state: SpendingAnalyticsUiState.Success, onBackClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,12 +66,14 @@ private fun AnalyticsContent(state: SpendingAnalyticsUiState.Success) {
     ) {
         // Top App Bar
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White
-            )
-            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Spending Breakdown",
                 color = Color.White,
@@ -182,7 +182,7 @@ private fun ExpenseLegend(expenses: List<ExpenseCategory>) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = expense.name.split("/")[0], // Truncates "Coffee/Dining" to "Coffee"
+                    text = expense.name.split("/")[0],
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
@@ -254,16 +254,9 @@ private fun AnalyticsPreview() {
         )
     )
 
-    Scaffold(
-        bottomBar = { GanuDenuBottomNavBar() },
-        containerColor = ThemeBlack
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            AnalyticsContent(state = mockState)
+    Scaffold(containerColor = ThemeBlack) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            AnalyticsContent(mockState, {})
         }
     }
 }

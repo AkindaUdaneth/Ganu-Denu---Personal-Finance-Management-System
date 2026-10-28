@@ -28,7 +28,7 @@ private val SurfaceDark = Color(0xFF18181B)
 private val BorderGray = Color(0xFF3F3F46)
 
 @Composable
-fun GoalFormScreen(viewModel: GoalFormViewModel) {
+fun GoalFormScreen(viewModel: GoalFormViewModel, onBackClick: () -> Unit = {}) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -73,7 +73,8 @@ fun GoalFormScreen(viewModel: GoalFormViewModel) {
                 onTargetAmountChange = viewModel::updateTargetAmount,
                 onTargetDateChange = viewModel::updateTargetDate,
                 onCurrentSavedChange = viewModel::updateCurrentSaved,
-                onSaveClick = viewModel::saveGoal
+                onSaveClick = viewModel::saveGoal,
+                onBackClick = onBackClick
             )
         }
     }
@@ -86,7 +87,8 @@ private fun GoalFormContent(
     onTargetAmountChange: (String) -> Unit,
     onTargetDateChange: (String) -> Unit,
     onCurrentSavedChange: (String) -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -96,8 +98,10 @@ private fun GoalFormContent(
     ) {
         // Top App Bar
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(text = "Edit Goal", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
@@ -188,14 +192,7 @@ private fun GoalFormPreview() {
 
     Scaffold(containerColor = ThemeBlack) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            GoalFormContent(
-                state = mockState,
-                onNameChange = {},
-                onTargetAmountChange = {},
-                onTargetDateChange = {},
-                onCurrentSavedChange = {},
-                onSaveClick = {}
-            )
+            GoalFormContent(mockState, {}, {}, {}, {}, {}, {})
         }
     }
 }
