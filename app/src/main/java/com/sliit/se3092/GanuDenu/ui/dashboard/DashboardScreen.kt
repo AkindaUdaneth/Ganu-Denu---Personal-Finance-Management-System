@@ -26,6 +26,10 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Settings
 
 // Theme Colors
 private val ThemeBlack = Color(0xFF000000)
@@ -37,24 +41,30 @@ private val BorderGray = Color(0xFF3F3F46)
 fun DashboardScreen(viewModel: DashboardViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = ThemeBlack
-    ) {
-        when (val state = uiState) {
-            is DashboardUiState.Loading -> {
-                Box(contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = ThemeYellow)
+    Scaffold(
+        bottomBar = { GanuDenuBottomNavBar() },
+        containerColor = ThemeBlack
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when (val state = uiState) {
+                is DashboardUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = ThemeYellow)
+                    }
                 }
-            }
-            is DashboardUiState.Success -> {
-                DashboardContent(state)
-            }
-            is DashboardUiState.Error -> {
-                // To be implemented
-            }
-            is DashboardUiState.Empty -> {
-                // To be implemented
+                is DashboardUiState.Success -> {
+                    DashboardContent(state)
+                }
+                is DashboardUiState.Error -> {
+                    // To be implemented
+                }
+                is DashboardUiState.Empty -> {
+                    // To be implemented
+                }
             }
         }
     }
@@ -346,7 +356,50 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+private fun GanuDenuBottomNavBar() {
+    NavigationBar(
+        containerColor = Color(0xFF121214),
+        contentColor = Color.LightGray
+    ) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
+            label = { Text("Dashboard") },
+            selected = true,
+            onClick = { },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = ThemeBlack,
+                selectedTextColor = ThemeYellow,
+                indicatorColor = ThemeYellow,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.ArrowDownward, contentDescription = "Income") },
+            label = { Text("Income") },
+            selected = false,
+            onClick = { },
+            colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.ArrowUpward, contentDescription = "Expenses") },
+            label = { Text("Expenses") },
+            selected = false,
+            onClick = { },
+            colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") },
+            selected = false,
+            onClick = { },
+            colors = NavigationBarItemDefaults.colors(unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray)
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
 @Composable
 private fun DashboardPreview() {
     val mockState = DashboardUiState.Success(
@@ -364,5 +417,16 @@ private fun DashboardPreview() {
         )
     )
 
-    DashboardContent(state = mockState)
+    Scaffold(
+        bottomBar = { GanuDenuBottomNavBar() },
+        containerColor = ThemeBlack
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            DashboardContent(state = mockState)
+        }
+    }
 }
