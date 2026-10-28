@@ -21,6 +21,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.sliit.se3092.ganudenu.R
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Receipt
 
 // Theme Colors
 private val ThemeBlack = Color(0xFF000000)
@@ -95,6 +100,10 @@ private fun DashboardContent(state: DashboardUiState.Success) {
             currentSaved = state.goalCurrentSaved,
             targetAmount = state.goalTargetAmount,
             requiredMonthly = state.requiredMonthlySavings
+        )
+
+        ActiveSubscriptionsCard(
+            subscriptions = state.activeSubscriptions
         )
     }
 }
@@ -268,6 +277,75 @@ private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, require
     }
 }
 
+@Composable
+private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
+    val format = NumberFormat.getNumberInstance(Locale.US)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Active Subscriptions",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            subscriptions.forEach { sub ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF141416), RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Icon Circle
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(ThemeYellow, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val icon = when (sub.iconType) {
+                            "GYM" -> Icons.Default.FitnessCenter
+                            "SOFTWARE" -> Icons.Default.AutoAwesome
+                            "TRANSPORT" -> Icons.Default.DirectionsCar
+                            else -> Icons.Default.Receipt
+                        }
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = sub.name,
+                            tint = ThemeBlack,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Text(
+                        text = sub.name,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = "LKR ${format.format(sub.costPerMonth)}/mo",
+                        color = Color.LightGray,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun DashboardPreview() {
@@ -279,7 +357,11 @@ private fun DashboardPreview() {
         goalCurrentSaved = 11200.0,
         goalTargetAmount = 49000.0,
         requiredMonthlySavings = 39900.0,
-        activeSubscriptions = emptyList()
+        activeSubscriptions = listOf(
+            SubscriptionItem("Gym Membership", 2500.0, "GYM"),
+            SubscriptionItem("Gemini Pro", 7000.0, "SOFTWARE"),
+            SubscriptionItem("Uber One", 1500.0, "TRANSPORT")
+        )
     )
 
     DashboardContent(state = mockState)
