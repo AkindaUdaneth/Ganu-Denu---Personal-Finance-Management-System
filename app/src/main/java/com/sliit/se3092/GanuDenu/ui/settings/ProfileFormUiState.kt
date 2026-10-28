@@ -5,5 +5,6 @@ data class ProfileFormUiState(
     val email: String = "",
     val newPassword: String = "",
     val confirmPassword: String = "",
-    val showSuccessSnackbar: Boolean = false
+    val showSuccessSnackbar: Boolean = false,
+    val showPhotoBottomSheet: Boolean = false
 )

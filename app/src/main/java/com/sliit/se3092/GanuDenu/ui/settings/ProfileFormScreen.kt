@@ -2,13 +2,17 @@ package com.sliit.se3092.GanuDenu.ui.settings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,11 +34,14 @@ private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
 private val SurfaceDark = Color(0xFF18181B)
 private val BorderGray = Color(0xFF3F3F46)
+private val DangerRed = Color(0xFFEF4444)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileFormScreen(viewModel: ProfileFormViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val sheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(state.showSuccessSnackbar) {
         if (state.showSuccessSnackbar) {
@@ -76,8 +83,22 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel) {
                 onEmailChange = viewModel::updateEmail,
                 onNewPasswordChange = viewModel::updateNewPassword,
                 onConfirmPasswordChange = viewModel::updateConfirmPassword,
-                onSaveClick = viewModel::saveProfile
+                onSaveClick = viewModel::saveProfile,
+                onChangePhotoClick = { viewModel.updatePhotoBottomSheetVisibility(true) }
             )
+
+            if (state.showPhotoBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { viewModel.updatePhotoBottomSheetVisibility(false) },
+                    sheetState = sheetState,
+                    containerColor = SurfaceDark,
+                    dragHandle = { BottomSheetDefaults.DragHandle(color = BorderGray) }
+                ) {
+                    PhotoBottomSheetContent(
+                        onDismiss = { viewModel.updatePhotoBottomSheetVisibility(false) }
+                    )
+                }
+            }
         }
     }
 }
@@ -89,12 +110,13 @@ private fun ProfileFormContent(
     onEmailChange: (String) -> Unit,
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    onChangePhotoClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp), // Matched wider padding from Figma
+            .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Top App Bar
@@ -116,7 +138,7 @@ private fun ProfileFormContent(
                     .background(Color(0xFF27272A), CircleShape)
             )
             OutlinedButton(
-                onClick = { },
+                onClick = onChangePhotoClick,
                 border = BorderStroke(1.dp, Color.White),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                 shape = RoundedCornerShape(50),
@@ -175,6 +197,58 @@ private fun ProfileFormContent(
 }
 
 @Composable
+private fun PhotoBottomSheetContent(onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
+    ) {
+        BottomSheetRow(
+            icon = Icons.Default.CameraAlt,
+            text = "Take a photo",
+            textColor = Color.White,
+            iconColor = Color.LightGray,
+            onClick = onDismiss
+        )
+        BottomSheetRow(
+            icon = Icons.Default.PhotoLibrary,
+            text = "Choose from gallery",
+            textColor = Color.White,
+            iconColor = Color.LightGray,
+            onClick = onDismiss
+        )
+        BottomSheetRow(
+            icon = Icons.Default.Delete,
+            text = "Remove photo",
+            textColor = DangerRed,
+            iconColor = DangerRed,
+            onClick = onDismiss
+        )
+    }
+}
+
+@Composable
+private fun BottomSheetRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    textColor: Color,
+    iconColor: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = iconColor)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = text, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
 private fun GanuDenuExternalLabelTextField(
     value: String,
     onValueChange: (String) -> Unit,
@@ -223,7 +297,8 @@ private fun ProfileFormPreview() {
                 onEmailChange = {},
                 onNewPasswordChange = {},
                 onConfirmPasswordChange = {},
-                onSaveClick = {}
+                onSaveClick = {},
+                onChangePhotoClick = {}
             )
         }
     }
