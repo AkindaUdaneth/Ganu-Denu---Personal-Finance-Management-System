@@ -1,4 +1,7 @@
 [versions]
+# Keep Firebase compatible with this project's Kotlin/KSP toolchain.
+firebaseBom = "34.2.0"
+googleServices = "4.5.0"
 agp = "9.3.3"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -15,6 +18,9 @@ firebaseBom = "34.2.0"
 koin = "3.5.6"
 
 [libraries]
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -40,6 +46,7 @@ koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compos
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version = "1.2.0-alpha05" }
 
 [plugins]
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
