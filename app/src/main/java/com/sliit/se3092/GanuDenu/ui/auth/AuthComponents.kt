@@ -100,6 +100,6 @@ internal fun AuthSubmitButton(label: String, busy: Boolean, onClick: () -> Unit)
     Button(onClick = onClick, enabled = !busy, modifier = Modifier.fillMaxWidth().height(50.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AuthYellow, contentColor = Color.Black), shape = CircleShape) {
         if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = Color.Black, strokeWidth = 2.dp)
-        else Text(label, fontWeight = FontWeight.Bold)
+        else Text(label, color = Color.Black, fontWeight = FontWeight.Bold)
     }
 }
