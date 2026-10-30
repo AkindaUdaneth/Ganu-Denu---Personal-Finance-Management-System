@@ -8,7 +8,7 @@ import com.sliit.se3092.GanuDenu.data.local.entity.RecurringItemEntity
 
 @Database(
     entities = [ExpenseEntity::class, RecurringItemEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
