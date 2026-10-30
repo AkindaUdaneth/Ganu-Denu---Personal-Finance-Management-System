@@ -20,6 +20,16 @@ fun GanuDenuBottomNavBar(navController: NavController) {
     val ThemeBlack = Color(0xFF000000)
     val ThemeYellow = Color(0xFFFFEF00)
 
+    // Check if the current route belongs to the Expenses flow
+    val isExpenseSelected = currentRoute in listOf(
+        Screen.ExpenseHub.route,
+        Screen.DailyExpenses.route,
+        Screen.DailyExpenseLogger.route,
+        Screen.RecurringExpenses.route,
+        Screen.RecurringExpenseLogger.route,
+        Screen.QuickExpense.route
+    )
+
     NavigationBar(
         containerColor = Color(0xFF121214),
         contentColor = Color.LightGray
@@ -28,6 +38,8 @@ fun GanuDenuBottomNavBar(navController: NavController) {
         val navigateTo = { route: String ->
             if (currentRoute == Screen.AddIncome.route && route == Screen.IncomeHub.route) {
                 navController.popBackStack(Screen.IncomeHub.route, false)
+            } else if (isExpenseSelected && route == Screen.ExpenseHub.route) {
+                navController.popBackStack(Screen.ExpenseHub.route, false)
             } else if (currentRoute != route) {
                 navController.navigate(route) {
                     popUpTo(Screen.Dashboard.route) { saveState = true }
@@ -60,8 +72,8 @@ fun GanuDenuBottomNavBar(navController: NavController) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.ArrowUpward, contentDescription = "Expenses") },
             label = { Text("Expenses") },
-            selected = currentRoute == Screen.QuickExpense.route,
-            onClick = { navigateTo(Screen.QuickExpense.route) },
+            selected = isExpenseSelected,
+            onClick = { navigateTo(Screen.ExpenseHub.route) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = ThemeBlack, selectedTextColor = ThemeYellow, indicatorColor = ThemeYellow,
                 unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray

@@ -12,6 +12,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -221,11 +224,13 @@ fun DailyExpensesManagerContent(
                                         .border(1.dp, CanaryYellow.copy(alpha = 0.45f), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
+                                    val catLower = item.category.lowercase(Locale.ROOT)
                                     val icon = when {
-                                        item.category.contains("PickMe", ignoreCase = true) ||
-                                                item.category.contains("Ride", ignoreCase = true) -> Icons.Default.DirectionsCar
-                                        item.category.contains("Uber", ignoreCase = true) ||
-                                                item.category.contains("Food", ignoreCase = true) -> Icons.Default.Fastfood
+                                        catLower.contains("pickme") || catLower.contains("ride") || catLower.contains("car") || catLower.contains("transport") -> Icons.Default.DirectionsCar
+                                        catLower.contains("uber") || catLower.contains("food") || catLower.contains("dining") || catLower.contains("eat") -> Icons.Default.Fastfood
+                                        catLower.contains("coffee") || catLower.contains("cafe") || catLower.contains("tea") -> Icons.Default.LocalCafe
+                                        catLower.contains("fuel") || catLower.contains("gas") || catLower.contains("petrol") -> Icons.Default.LocalGasStation
+                                        catLower.contains("medical") || catLower.contains("doctor") || catLower.contains("hospital") || catLower.contains("health") || catLower.contains("pharmacy") -> Icons.Default.LocalHospital
                                         else -> Icons.Default.ShoppingCart
                                     }
                                     Icon(

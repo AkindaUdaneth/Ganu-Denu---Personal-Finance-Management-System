@@ -2,7 +2,7 @@ package com.sliit.se3092.GanuDenu.ui.expenses
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-//import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuth
 import com.sliit.se3092.GanuDenu.data.local.entity.ExpenseEntity
 import com.sliit.se3092.GanuDenu.data.local.entity.RecurringItemEntity
 import com.sliit.se3092.GanuDenu.data.repository.ExpenseRepository
@@ -10,64 +10,114 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.UUID
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class ExpenseViewModel @Inject constructor(
-    private val repository: ExpenseRepository
+    private val repository: ExpenseRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseUiState(isLoading = true))
     val uiState: StateFlow<ExpenseUiState> = _uiState.asStateFlow()
 
-    private val currentUserId: String = "user_default"
-
     init {
-        observeExpenseData()
+        loadExpenseData()
     }
 
-    private fun observeExpenseData() {
+    fun loadExpenseData() {
+        val currentUserId = auth.currentUser?.uid.orEmpty()
+
+        if (currentUserId.isBlank()) {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "User not authenticated"
+            )
+            return
+        }
+
         viewModelScope.launch {
+            repository.syncPendingExpenses(currentUserId)
+            repository.fetchRemoteExpenses(currentUserId)
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
             combine(
                 repository.getAllExpenses(currentUserId),
                 repository.getActiveRecurringItems(currentUserId)
-            ) { expenses, recurring ->
-                val calendar = Calendar.getInstance()
-                val currentYear = calendar.get(Calendar.YEAR)
-                val currentMonth = calendar.get(Calendar.MONTH)
-                val currentDay = calendar.get(Calendar.DAY_OF_YEAR)
-
-                var todaySum = 0.0
-                var monthSum = 0.0
-
-                expenses.forEach { item ->
-                    val itemCal = Calendar.getInstance().apply { timeInMillis = item.date }
-                    if (itemCal.get(Calendar.YEAR) == currentYear && itemCal.get(Calendar.MONTH) == currentMonth) {
-                        monthSum += item.amount
-                        if (itemCal.get(Calendar.DAY_OF_YEAR) == currentDay) {
-                            todaySum += item.amount
-                        }
-                    }
-                }
-
-                val overhead = recurring.filter { it.isActive }.sumOf { it.amount }
-
-                ExpenseUiState(
-                    dailyExpenses = expenses.sortedByDescending { it.date },
-                    recurringItems = recurring,
-                    totalDailyToday = todaySum,
-                    totalDailyMonth = monthSum,
-                    committedOverheadMonthly = overhead,
-                    isLoading = false
+            ) { expenses, recurringItems ->
+                calculateUiState(expenses, recurringItems)
+            }.catch { throwable ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = throwable.localizedMessage ?: "Failed to load expenses"
                 )
-            }.collect { state ->
-                _uiState.value = state
+            }.collect { newState ->
+                _uiState.value = newState
             }
         }
+    }
+
+    private fun calculateUiState(
+        expenses: List<ExpenseEntity>,
+        recurringItems: List<RecurringItemEntity>
+    ): ExpenseUiState {
+        val now = Calendar.getInstance()
+        val currentYear = now.get(Calendar.YEAR)
+        val currentMonth = now.get(Calendar.MONTH)
+        val currentDay = now.get(Calendar.DAY_OF_YEAR)
+
+        var todaySum = 0.0
+        var monthSum = 0.0
+
+        val itemCal = Calendar.getInstance()
+
+        // 1. Calculate Daily Totals
+        for (expense in expenses) {
+            itemCal.timeInMillis = expense.date
+            if (itemCal.get(Calendar.YEAR) == currentYear) {
+                if (itemCal.get(Calendar.MONTH) == currentMonth) {
+                    monthSum += expense.amount
+                }
+                if (itemCal.get(Calendar.DAY_OF_YEAR) == currentDay) {
+                    todaySum += expense.amount
+                }
+            }
+        }
+
+        // 2. Calculate Committed Monthly Overhead
+        var overheadMonthlySum = 0.0
+        for (recurring in recurringItems) {
+            if (recurring.isActive) {
+                overheadMonthlySum += when (recurring.cadence.lowercase(Locale.ROOT)) {
+                    "daily" -> recurring.amount * 30.0
+                    "weekly" -> recurring.amount * 4.33
+                    "yearly", "annually" -> recurring.amount / 12.0
+                    else -> recurring.amount // Default: Monthly
+                }
+            }
+        }
+
+        return _uiState.value.copy(
+            dailyExpenses = expenses,
+            recurringItems = recurringItems,
+            totalDailyToday = todaySum,
+            totalDailyMonth = monthSum,
+            committedOverheadMonthly = overheadMonthlySum,
+            isLoading = false,
+            errorMessage = null
+        )
+    }
+
+    fun updateFilter(filter: String) {
+        _uiState.value = _uiState.value.copy(selectedFilter = filter)
     }
 
     fun addDailyExpense(
@@ -77,16 +127,17 @@ class ExpenseViewModel @Inject constructor(
         date: Long,
         onSuccess: () -> Unit
     ) {
+        val currentUserId = auth.currentUser?.uid.orEmpty()
         viewModelScope.launch {
-            val entity = ExpenseEntity(
+            val expense = ExpenseEntity(
                 userId = currentUserId,
                 amount = amount,
+                date = date,
                 category = category,
                 paymentMethod = paymentMethod,
-                classification = "Discretionary", // Pass "Discretionary" string instead of isDiscretionary boolean
-                date = date
+                classification = "Discretionary"
             )
-            repository.insertExpense(entity)
+            repository.insertExpense(expense)
             onSuccess()
         }
     }
@@ -98,25 +149,29 @@ class ExpenseViewModel @Inject constructor(
         paymentMethod: String,
         onSuccess: () -> Unit
     ) {
+        val currentUserId = auth.currentUser?.uid.orEmpty()
         viewModelScope.launch {
-            val item = RecurringItemEntity(
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_MONTH, dueDay.coerceIn(1, 28))
+            val recurringItem = RecurringItemEntity(
                 userId = currentUserId,
                 name = title,
                 amount = amount,
-                category = "Subscription",
+                category = paymentMethod,
                 classification = "Committed",
                 cadence = "Monthly",
-                nextDueDate = System.currentTimeMillis(), // or dueDay.toLong() depending on whether it's Long or String
-                isActive = true                          // uses 'isActive' instead of 'active'
+                nextDueDate = calendar.timeInMillis,
+                isActive = true
             )
-            repository.insertRecurringItem(item)
+            repository.insertRecurringItem(recurringItem)
             onSuccess()
         }
     }
 
     fun toggleRecurringStatus(item: RecurringItemEntity) {
         viewModelScope.launch {
-            repository.updateRecurringItem(item.copy(isActive = !item.isActive))
+            val updated = item.copy(isActive = !item.isActive)
+            repository.updateRecurringItem(updated)
         }
     }
 }

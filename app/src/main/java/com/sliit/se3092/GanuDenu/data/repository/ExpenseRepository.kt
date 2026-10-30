@@ -12,4 +12,7 @@ interface ExpenseRepository {
     fun getActiveRecurringItems(userId: String): Flow<List<RecurringItemEntity>>
     suspend fun insertRecurringItem(item: RecurringItemEntity)
     suspend fun updateRecurringItem(item: RecurringItemEntity)
+
+    suspend fun syncPendingExpenses(userId: String)
+    suspend fun fetchRemoteExpenses(userId: String)
 }

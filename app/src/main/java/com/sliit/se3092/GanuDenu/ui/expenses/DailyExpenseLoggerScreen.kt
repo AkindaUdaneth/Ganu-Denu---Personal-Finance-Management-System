@@ -5,11 +5,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.LocalGasStation
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,9 +63,10 @@ fun DailyExpenseLoggerContent(
     var selectedCategory by remember { mutableStateOf("PickMe") }
     var selectedMethod by remember { mutableStateOf("Cash") }
     var selectedCalendar by remember { mutableStateOf(Calendar.getInstance()) }
+    var showAddCategorySheet by remember { mutableStateOf(false) }
     val dateFormat = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
 
-    val categories = listOf("PickMe", "UberEats", "Coffee", "Groceries")
+    val categories = remember { mutableStateListOf("PickMe", "UberEats", "Coffee", "Groceries") }
     val paymentMethods = listOf("Cash", "Card", "Secondary Account")
 
     val datePickerDialog = DatePickerDialog(
@@ -72,6 +81,26 @@ fun DailyExpenseLoggerContent(
         selectedCalendar.get(Calendar.MONTH),
         selectedCalendar.get(Calendar.DAY_OF_MONTH)
     )
+
+    if (showAddCategorySheet) {
+        AddCategoryBottomSheet(
+            onDismissRequest = { showAddCategorySheet = false },
+            onAddCategory = { newCategory, iconName ->
+                val lowerCat = newCategory.lowercase(Locale.ROOT)
+                val lowerIcon = iconName.lowercase(Locale.ROOT)
+                val formattedCategory = if (lowerCat.contains(lowerIcon) || lowerIcon == "shopping") {
+                    newCategory
+                } else {
+                    "$newCategory ($iconName)"
+                }
+
+                if (!categories.contains(formattedCategory)) {
+                    categories.add(formattedCategory)
+                }
+                selectedCategory = formattedCategory
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -117,11 +146,11 @@ fun DailyExpenseLoggerContent(
 
                 // Category Selection
                 Text("Type", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                Row(
+                LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    categories.forEach { cat ->
+                    items(categories) { cat ->
                         FilterChip(
                             selected = (selectedCategory == cat),
                             onClick = { selectedCategory = cat },
@@ -139,7 +168,7 @@ fun DailyExpenseLoggerContent(
                     "Add new +",
                     color = Color(0xFFAAAAAA),
                     fontSize = 12.sp,
-                    modifier = Modifier.clickable { /* Expand category dialog */ }
+                    modifier = Modifier.clickable { showAddCategorySheet = true }
                 )
 
                 // Date Picker Field (Supports Backfill FR-EXP-008)
@@ -214,6 +243,161 @@ fun DailyExpenseLoggerContent(
                 colors = ButtonDefaults.buttonColors(containerColor = CanaryYellow)
             ) {
                 Text("Save Expense", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddCategoryBottomSheet(
+    onDismissRequest: () -> Unit,
+    onAddCategory: (categoryName: String, iconName: String) -> Unit
+) {
+    var categoryName by remember { mutableStateOf("") }
+    var selectedIconIndex by remember { mutableIntStateOf(0) }
+
+    val iconOptions = listOf(
+        Pair("Shopping", Icons.Default.ShoppingCart),
+        Pair("Dining", Icons.Default.Fastfood),
+        Pair("Coffee", Icons.Default.LocalCafe),
+        Pair("Fuel", Icons.Default.LocalGasStation),
+        Pair("Medical", Icons.Default.LocalHospital)
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        containerColor = DarkCardBg,
+        scrimColor = Color.Black.copy(alpha = 0.65f),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = 12.dp)
+                    .width(40.dp)
+                    .height(4.dp)
+                    .background(Color(0xFF333333), CircleShape)
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Title
+            Text(
+                text = "New Category",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Category Name Input Field
+            OutlinedTextField(
+                value = categoryName,
+                onValueChange = { categoryName = it },
+                placeholder = { Text("Category Name", color = Color(0xFF666666), fontSize = 14.sp) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = CanaryYellow,
+                    unfocusedBorderColor = CardBorder,
+                    focusedContainerColor = DarkBackground,
+                    unfocusedContainerColor = DarkBackground,
+                    cursorColor = CanaryYellow
+                )
+            )
+
+            // Icon Selection Section
+            Text(
+                text = "Select Icon",
+                color = Color(0xFFAAAAAA),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                iconOptions.forEachIndexed { index, (name, icon) ->
+                    val isSelected = selectedIconIndex == index
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .background(
+                                color = if (isSelected) CanaryYellow else DarkBackground,
+                                shape = CircleShape
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = if (isSelected) CanaryYellow else CardBorder,
+                                shape = CircleShape
+                            )
+                            .clickable { selectedIconIndex = index },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = name,
+                            tint = if (isSelected) Color.Black else Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Action Buttons (Cancel & Add Category)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Button(
+                    onClick = {
+                        val trimmed = categoryName.trim()
+                        if (trimmed.isNotBlank()) {
+                            onAddCategory(trimmed, iconOptions[selectedIconIndex].first)
+                            onDismissRequest()
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CanaryYellow,
+                        disabledContainerColor = CanaryYellow.copy(alpha = 0.4f)
+                    ),
+                    enabled = categoryName.isNotBlank()
+                ) {
+                    Text(
+                        text = "Add Category",
+                        color = Color.Black,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

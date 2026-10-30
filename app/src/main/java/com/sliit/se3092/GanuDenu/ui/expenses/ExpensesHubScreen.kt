@@ -20,23 +20,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 val CanaryYellow = Color(0xFFFFE600)
 val DarkBackground = Color(0xFF0C0C0C)
 val DarkCardBg = Color(0xFF161616)
 val CardBorder = Color(0xFF242424)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpensesHubScreen(
     viewModel: ExpenseViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToDailyManager: () -> Unit,
-    onNavigateToDailyLogger: () -> Unit,
     onNavigateToRecurringManager: () -> Unit,
     onNavigateToAddRecurring: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    val monthName = remember {
+        java.text.SimpleDateFormat("MMM", java.util.Locale.getDefault())
+            .format(java.util.Calendar.getInstance().time)
+    }
 
     ExpensesHubContent(
         totalDailyToday = state.totalDailyToday,
@@ -44,7 +46,6 @@ fun ExpensesHubScreen(
         committedOverheadMonthly = state.committedOverheadMonthly,
         onNavigateBack = onNavigateBack,
         onNavigateToDailyManager = onNavigateToDailyManager,
-        onNavigateToDailyLogger = onNavigateToDailyLogger,
         onNavigateToRecurringManager = onNavigateToRecurringManager,
         onNavigateToAddRecurring = onNavigateToAddRecurring
     )
@@ -58,9 +59,9 @@ fun ExpensesHubContent(
     committedOverheadMonthly: Double,
     onNavigateBack: () -> Unit,
     onNavigateToDailyManager: () -> Unit,
-    onNavigateToDailyLogger: () -> Unit,
     onNavigateToRecurringManager: () -> Unit,
-    onNavigateToAddRecurring: () -> Unit
+    onNavigateToAddRecurring: () -> Unit,
+    bottomBar: @Composable () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -85,6 +86,7 @@ fun ExpensesHubContent(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBackground)
             )
         },
+        bottomBar = bottomBar,
         containerColor = DarkBackground
     ) { padding ->
         Column(
@@ -148,7 +150,7 @@ fun ExpensesHubContent(
                         contentAlignment = Alignment.CenterEnd
                     ) {
                         IconButton(
-                            onClick = onNavigateToDailyLogger,
+                            onClick = onNavigateToDailyManager,
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(CardBorder, CircleShape)
@@ -247,7 +249,6 @@ fun ExpensesHubScreenPreview() {
         committedOverheadMonthly = 42000.0,
         onNavigateBack = {},
         onNavigateToDailyManager = {},
-        onNavigateToDailyLogger = {},
         onNavigateToRecurringManager = {},
         onNavigateToAddRecurring = {}
     )

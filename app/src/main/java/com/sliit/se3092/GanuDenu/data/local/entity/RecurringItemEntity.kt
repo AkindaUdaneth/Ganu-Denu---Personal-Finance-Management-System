@@ -15,5 +15,6 @@ data class RecurringItemEntity(
     val classification: String = "Committed",
     val cadence: String = "Monthly",
     val nextDueDate: Long,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val syncStatus: String = "PENDING" // SYNCED, PENDING, FAILED
 )
