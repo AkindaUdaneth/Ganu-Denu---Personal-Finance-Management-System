@@ -1,18 +1,8 @@
-
 package com.sliit.se3092.GanuDenu
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
-import androidx.fragment.app.FragmentActivity
-import androidx.navigation.compose.rememberNavController
-import com.sliit.se3092.GanuDenu.ui.navigation.AppNavHost
-import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
-import dagger.hilt.android.AndroidEntryPoint
-
-@AndroidEntryPoint
-class MainActivity : FragmentActivity() {
-import androidx.fragment.app.FragmentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.fragment.app.FragmentActivity
@@ -21,12 +11,12 @@ import androidx.navigation.compose.rememberNavController
 import com.sliit.se3092.GanuDenu.ui.auth.AuthScreen
 import com.sliit.se3092.GanuDenu.ui.auth.AuthSession
 import com.sliit.se3092.GanuDenu.ui.auth.AuthViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import dagger.hilt.android.AndroidEntryPoint
 import com.sliit.se3092.GanuDenu.ui.navigation.AppNavHost
 import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
+import dagger.hilt.android.AndroidEntryPoint
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
     private val authViewModel: AuthViewModel by viewModel()

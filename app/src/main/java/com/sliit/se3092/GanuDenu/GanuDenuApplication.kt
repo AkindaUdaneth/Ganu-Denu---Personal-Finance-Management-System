@@ -13,7 +13,7 @@ import com.sliit.se3092.GanuDenu.data.income.IncomeRepository
 import com.sliit.se3092.GanuDenu.data.income.FirestoreIncomeRepository
 import com.sliit.se3092.GanuDenu.ui.income.IncomeViewModel
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
