@@ -14,8 +14,10 @@ import com.sliit.se3092.GanuDenu.ui.auth.AuthSession
 import com.sliit.se3092.GanuDenu.ui.auth.AuthViewModel
 import com.sliit.se3092.GanuDenu.ui.navigation.AppNavHost
 import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
+import dagger.hilt.android.AndroidEntryPoint
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
     private val authViewModel: AuthViewModel by viewModel()

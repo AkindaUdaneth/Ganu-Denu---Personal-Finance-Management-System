@@ -17,7 +17,7 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
-class GanuDenuApplication : Application() {
+open class GanuDenuApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         startKoin {
