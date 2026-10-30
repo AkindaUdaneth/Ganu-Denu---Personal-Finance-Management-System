@@ -16,6 +16,30 @@ service cloud.firestore {
         && data.createdAt is timestamp;
     }
 
+    function validIncome() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['source', 'status', 'originalAmount', 'currency',
+          'exchangeRateToLkr', 'amountLkrMinor', 'occurredAt', 'note', 'frequency', 'createdAt'])
+        && data.keys().hasOnly(['source', 'status', 'originalAmount', 'currency',
+          'exchangeRateToLkr', 'amountLkrMinor', 'occurredAt', 'note', 'frequency', 'createdAt'])
+        && data.source in ['salary', 'freelance', 'adsense', 'cryptocurrency']
+        && data.status in ['confirmed', 'estimated', 'pnl']
+        && (data.status != 'pnl' || data.source == 'cryptocurrency')
+        && data.currency in ['LKR', 'USD', 'USDT', 'ETH']
+        && (data.status == 'pnl' || data.currency in ['LKR', 'USD'])
+        && data.originalAmount is string && data.originalAmount.size() <= 40
+        && data.originalAmount.matches('^-?[0-9]+([.][0-9]{1,8})?$')
+        && data.exchangeRateToLkr is string && data.exchangeRateToLkr.size() <= 30
+        && data.exchangeRateToLkr.matches('^([1-9][0-9]*([.][0-9]{1,8})?|0[.][0-9]*[1-9][0-9]*)$')
+        && (data.currency != 'LKR' || data.exchangeRateToLkr == '1')
+        && data.amountLkrMinor is int && data.amountLkrMinor != 0
+        && data.amountLkrMinor >= -99999999999999 && data.amountLkrMinor <= 99999999999999
+        && (data.status == 'pnl' || data.amountLkrMinor > 0)
+        && data.frequency in ['one_off', 'daily', 'weekly', 'monthly', 'yearly']
+        && data.occurredAt is timestamp && data.createdAt is timestamp
+        && data.note is string && data.note.size() <= 120;
+    }
+
     match /users/{userId} {
       allow read, delete: if isOwner(userId);
       allow create: if isOwner(userId) && validProfile()
@@ -23,9 +47,16 @@ service cloud.firestore {
       allow update: if isOwner(userId) && validProfile()
         && request.resource.data.createdAt == resource.data.createdAt;
 
+      match /incomes/{incomeId} {
+        allow read, delete: if isOwner(userId);
+        // Saving the same draft ID again replaces it instead of adding a duplicate.
+        allow create, update: if isOwner(userId) && validIncome()
+          && request.resource.data.createdAt == request.time;
+      }
+
       match /{collectionName}/{documentId} {
         allow read, write: if isOwner(userId)
-          && collectionName in ['incomes', 'expenses', 'recurringItems', 'goals'];
+          && collectionName in ['expenses', 'recurringItems', 'goals'];
       }
     }
   }
