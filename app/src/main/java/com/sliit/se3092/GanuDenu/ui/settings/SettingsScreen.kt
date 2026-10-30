@@ -30,7 +30,8 @@ private val DangerRed = Color(0xFFEF4444)
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit = {},
-    onEditProfileClick: () -> Unit = {}
+    onEditProfileClick: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -61,7 +62,7 @@ fun SettingsScreen(
                     if (state.showLogoutDialog) {
                         LogoutDialog(
                             onDismiss = { viewModel.updateLogoutDialogVisibility(false) },
-                            onConfirm = { /* Handle logout logic later */ }
+                            onConfirm = onLogout
                         )
                     }
 
@@ -72,7 +73,13 @@ fun SettingsScreen(
                         )
                     }
                 }
-                is SettingsUiState.Error -> {}
+                is SettingsUiState.Error -> {
+                    Column(Modifier.align(Alignment.Center).padding(24.dp)) {
+                        Text(state.message, color = Color.White)
+                        TextButton(onClick = viewModel::loadProfileData) { Text("Retry") }
+                        TextButton(onClick = onLogout) { Text("Sign out") }
+                    }
+                }
             }
         }
     }
@@ -122,7 +129,7 @@ private fun SettingsContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = state.userName.first().toString(),
+                        text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                         color = ThemeBlack,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
