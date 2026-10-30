@@ -152,7 +152,9 @@ class ExpenseViewModel @Inject constructor(
         val currentUserId = auth.currentUser?.uid.orEmpty()
         viewModelScope.launch {
             val calendar = Calendar.getInstance()
-            calendar.set(Calendar.DAY_OF_MONTH, dueDay.coerceIn(1, 28))
+            val validDay = dueDay.coerceIn(1, 31)
+            val maxDayInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+            calendar.set(Calendar.DAY_OF_MONTH, validDay.coerceAtMost(maxDayInMonth))
             val recurringItem = RecurringItemEntity(
                 userId = currentUserId,
                 name = title,

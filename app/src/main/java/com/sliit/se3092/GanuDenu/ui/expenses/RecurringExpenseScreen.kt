@@ -10,9 +10,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -203,10 +207,14 @@ fun RecurringExpenseContent(
                                         .border(1.dp, CanaryYellow.copy(alpha = 0.45f), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
+                                    val lowerName = item.name.lowercase(Locale.ROOT)
                                     val icon = when {
-                                        item.name.contains("Rent", ignoreCase = true) -> Icons.Default.Home
-                                        item.name.contains("Gym", ignoreCase = true) ||
-                                                item.name.contains("Fitness", ignoreCase = true) -> Icons.Default.FitnessCenter
+                                        lowerName.contains("rent") || lowerName.contains("home") || lowerName.contains("house") -> Icons.Default.Home
+                                        lowerName.contains("gym") || lowerName.contains("fitness") -> Icons.Default.FitnessCenter
+                                        lowerName.contains("sub") || lowerName.contains("tv") || lowerName.contains("netflix") -> Icons.Default.Tv
+                                        lowerName.contains("bill") || lowerName.contains("utility") || lowerName.contains("receipt") || lowerName.contains("electric") -> Icons.Default.Receipt
+                                        lowerName.contains("software") || lowerName.contains("app") || lowerName.contains("tech") -> Icons.Default.AutoAwesome
+                                        lowerName.contains("transport") || lowerName.contains("car") || lowerName.contains("vehicle") -> Icons.Default.DirectionsCar
                                         else -> Icons.Default.Refresh
                                     }
                                     Icon(

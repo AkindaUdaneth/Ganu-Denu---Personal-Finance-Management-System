@@ -30,8 +30,7 @@ fun ExpensesHubScreen(
     viewModel: ExpenseViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToDailyManager: () -> Unit,
-    onNavigateToRecurringManager: () -> Unit,
-    onNavigateToAddRecurring: () -> Unit
+    onNavigateToRecurringManager: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -46,8 +45,7 @@ fun ExpensesHubScreen(
         committedOverheadMonthly = state.committedOverheadMonthly,
         onNavigateBack = onNavigateBack,
         onNavigateToDailyManager = onNavigateToDailyManager,
-        onNavigateToRecurringManager = onNavigateToRecurringManager,
-        onNavigateToAddRecurring = onNavigateToAddRecurring
+        onNavigateToRecurringManager = onNavigateToRecurringManager
     )
 }
 
@@ -60,7 +58,6 @@ fun ExpensesHubContent(
     onNavigateBack: () -> Unit,
     onNavigateToDailyManager: () -> Unit,
     onNavigateToRecurringManager: () -> Unit,
-    onNavigateToAddRecurring: () -> Unit,
     bottomBar: @Composable () -> Unit = {}
 ) {
     Scaffold(
@@ -221,7 +218,7 @@ fun ExpensesHubContent(
                         contentAlignment = Alignment.CenterEnd
                     ) {
                         IconButton(
-                            onClick = onNavigateToAddRecurring,
+                            onClick = onNavigateToRecurringManager,
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(CardBorder, CircleShape)
@@ -249,7 +246,6 @@ fun ExpensesHubScreenPreview() {
         committedOverheadMonthly = 42000.0,
         onNavigateBack = {},
         onNavigateToDailyManager = {},
-        onNavigateToRecurringManager = {},
-        onNavigateToAddRecurring = {}
+        onNavigateToRecurringManager = {}
     )
 }

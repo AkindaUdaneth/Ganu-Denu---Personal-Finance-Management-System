@@ -181,8 +181,7 @@ fun AppNavHost(
                     viewModel = expenseViewModel,
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToDailyManager = { navController.navigate(Screen.DailyExpenses.route) },
-                    onNavigateToRecurringManager = { navController.navigate(Screen.RecurringExpenses.route) },
-                    onNavigateToAddRecurring = { navController.navigate(Screen.RecurringExpenseLogger.route) }
+                    onNavigateToRecurringManager = { navController.navigate(Screen.RecurringExpenses.route) }
                 )
             }
 
