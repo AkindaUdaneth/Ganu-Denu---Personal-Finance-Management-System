@@ -14,5 +14,6 @@ sealed class Screen(val route: String) {
     data object CatchUp : Screen("catch_up")
     data object RecurringManager : Screen("recurring_manager")
     data object IncomeHub : Screen("income_hub")
+    data object AddIncome : Screen("add_income")
     data object GoalDetail : Screen("goal_detail")
 }
