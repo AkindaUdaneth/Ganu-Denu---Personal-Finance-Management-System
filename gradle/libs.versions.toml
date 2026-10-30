@@ -8,7 +8,7 @@ lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.13.0"
 kotlin = "2.0.21"
 composeBom = "2026.02.01"
-hilt = "2.51.1"
+hilt = "2.56"
 hiltNavigationCompose = "1.2.0"
 
 [libraries]
