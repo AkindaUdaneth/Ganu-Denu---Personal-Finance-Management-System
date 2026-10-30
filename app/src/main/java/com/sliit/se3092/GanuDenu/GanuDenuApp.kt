@@ -1,7 +1,7 @@
 package com.sliit.se3092.GanuDenu
 
-import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class GanuDenuApp : Application()
+// The base application starts Koin for authentication and income; Hilt supplies Room.
+class GanuDenuApp : GanuDenuApplication()

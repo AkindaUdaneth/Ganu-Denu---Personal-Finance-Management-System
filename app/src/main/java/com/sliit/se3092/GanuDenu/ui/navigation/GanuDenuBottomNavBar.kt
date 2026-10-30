@@ -26,7 +26,9 @@ fun GanuDenuBottomNavBar(navController: NavController) {
     ) {
         // Helper function to handle backstack state cleanly
         val navigateTo = { route: String ->
-            if (currentRoute != route) {
+            if (currentRoute == Screen.AddIncome.route && route == Screen.IncomeHub.route) {
+                navController.popBackStack(Screen.IncomeHub.route, false)
+            } else if (currentRoute != route) {
                 navController.navigate(route) {
                     popUpTo(Screen.Dashboard.route) { saveState = true }
                     launchSingleTop = true
@@ -48,7 +50,7 @@ fun GanuDenuBottomNavBar(navController: NavController) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.ArrowDownward, contentDescription = "Income") },
             label = { Text("Income") },
-            selected = currentRoute == Screen.IncomeHub.route,
+            selected = currentRoute == Screen.IncomeHub.route || currentRoute == Screen.AddIncome.route,
             onClick = { navigateTo(Screen.IncomeHub.route) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = ThemeBlack, selectedTextColor = ThemeYellow, indicatorColor = ThemeYellow,
