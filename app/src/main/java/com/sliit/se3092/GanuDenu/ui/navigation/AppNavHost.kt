@@ -27,8 +27,10 @@ import com.sliit.se3092.GanuDenu.ui.settings.SettingsViewModel
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.currentBackStackEntryAsState
 import org.koin.androidx.compose.koinViewModel
+import com.sliit.se3092.GanuDenu.ui.income.AddIncomeScreen
 import com.sliit.se3092.GanuDenu.ui.income.IncomeDashboardScreen
 import com.sliit.se3092.GanuDenu.ui.income.IncomeViewModel
 
@@ -117,11 +119,46 @@ fun AppNavHost(
             composable(Screen.QuickExpense.route) { PlaceholderScreen(title = "Quick Expense Log") }
             composable(Screen.CatchUp.route) { PlaceholderScreen(title = "Catch-Up Mode") }
             composable(Screen.RecurringManager.route) { PlaceholderScreen(title = "Recurring & Subscriptions") }
+
             composable(Screen.IncomeHub.route) {
-                val viewModel: IncomeViewModel = koinViewModel()
-                IncomeDashboardScreen(viewModel, onBack = {
-                    if (!navController.popBackStack()) navController.navigate(Screen.Dashboard.route) { launchSingleTop = true }
-                })
+                val incomeViewModel: IncomeViewModel = koinViewModel()
+
+                IncomeDashboardScreen(
+                    incomeViewModel,
+                    onBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Dashboard.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onLogIncome = {
+                        incomeViewModel.openLogger()
+                        navController.navigate(Screen.AddIncome.route) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.AddIncome.route) { entry ->
+                val incomeEntry = remember(entry) {
+                    navController.getBackStackEntry(Screen.IncomeHub.route)
+                }
+
+                val incomeViewModel: IncomeViewModel = koinViewModel(
+                    viewModelStoreOwner = incomeEntry
+                )
+
+                AddIncomeScreen(
+                    incomeViewModel,
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                    onSaved = {
+                        navController.popBackStack()
+                    }
+                )
             }
             composable(Screen.GoalDetail.route) { PlaceholderScreen(title = "MacBook Goal Detail") }
         }
