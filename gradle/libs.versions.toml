@@ -8,9 +8,12 @@ lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.13.0"
 kotlin = "2.0.21"
 composeBom = "2026.02.01"
+hilt = "2.60.1"
 
 hilt = "2.56"
 hiltNavigationCompose = "1.2.0"
+googleServices = "4.5.0"
+firebaseBom = "34.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
