@@ -7,8 +7,9 @@ import com.google.firebase.firestore.Source
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class FirebaseAuthRepository(
+class FirebaseAuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) : AuthRepository {

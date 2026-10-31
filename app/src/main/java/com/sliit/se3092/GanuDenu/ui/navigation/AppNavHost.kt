@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -74,9 +73,9 @@ fun AppNavHost(
             startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(paddingValues)
         ) {
-            // --- Dashboard & Analytics ---
+            // --- Dashboard & Analytics (Now using Hilt) ---
             composable(Screen.Dashboard.route) {
-                val viewModel: DashboardViewModel = viewModel()
+                val viewModel: DashboardViewModel = hiltViewModel()
                 DashboardScreen(
                     viewModel = viewModel,
                     onGoalClick = { navController.navigate(Screen.GoalEngine.route) },
@@ -85,43 +84,33 @@ fun AppNavHost(
                 )
             }
             composable(Screen.Analytics.route) {
-                val viewModel: SpendingAnalyticsViewModel = viewModel()
+                val viewModel: SpendingAnalyticsViewModel = hiltViewModel()
                 SpendingAnalyticsScreen(
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() }
                 )
             }
 
-            // --- Goal Engine ---
+            // --- Goal Engine (Now using Hilt) ---
             composable(Screen.GoalEngine.route) {
-                val viewModel: GoalEngineViewModel = viewModel()
+                val viewModel: GoalEngineViewModel = hiltViewModel()
                 GoalEngineScreen(
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
                     onEditClick = { navController.navigate(Screen.GoalForm.route) }
                 )
             }
-            composable(Screen.Settings.route) {
-                val viewModel: SettingsViewModel = koinViewModel()
-                SettingsScreen(
-                    viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onEditProfileClick = { navController.navigate(Screen.ProfileForm.route) },
-                    onLogout = onLogout
-                )
-            }
             composable(Screen.GoalForm.route) {
-                val viewModel: GoalFormViewModel = viewModel()
+                val viewModel: GoalFormViewModel = hiltViewModel()
                 GoalFormScreen(
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() }
                 )
             }
-            composable(Screen.GoalDetail.route) { PlaceholderScreen(title = "MacBook Goal Detail") }
 
-            // --- Settings & Profile ---
+            // --- Settings & Profile (Now using Hilt) ---
             composable(Screen.Settings.route) {
-                val viewModel: SettingsViewModel = koinViewModel()
+                val viewModel: SettingsViewModel = hiltViewModel()
                 SettingsScreen(
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
@@ -130,17 +119,16 @@ fun AppNavHost(
                 )
             }
             composable(Screen.ProfileForm.route) {
-                val viewModel: ProfileFormViewModel = viewModel()
+                val viewModel: ProfileFormViewModel = hiltViewModel()
                 ProfileFormScreen(
                     viewModel = viewModel,
                     onCloseClick = { navController.popBackStack() }
                 )
             }
 
-            // --- Income Flow ---
+            // --- Income Flow (Koin implementation preserved) ---
             composable(Screen.IncomeHub.route) {
                 val incomeViewModel: IncomeViewModel = koinViewModel()
-
                 IncomeDashboardScreen(
                     incomeViewModel,
                     onBack = {
@@ -162,11 +150,9 @@ fun AppNavHost(
                 val incomeEntry = remember(entry) {
                     navController.getBackStackEntry(Screen.IncomeHub.route)
                 }
-
                 val incomeViewModel: IncomeViewModel = koinViewModel(
                     viewModelStoreOwner = incomeEntry
                 )
-
                 AddIncomeScreen(
                     incomeViewModel,
                     onBack = { navController.popBackStack() },
@@ -174,7 +160,7 @@ fun AppNavHost(
                 )
             }
 
-            // --- Expense Flow ---
+            // --- Expense Flow (Hilt implementation preserved) ---
             composable(Screen.ExpenseHub.route) {
                 val expenseViewModel: ExpenseViewModel = hiltViewModel()
                 ExpensesHubScreen(
@@ -184,8 +170,6 @@ fun AppNavHost(
                     onNavigateToRecurringManager = { navController.navigate(Screen.RecurringExpenses.route) }
                 )
             }
-
-            // 1. Daily Expenses Manager Screen
             composable(Screen.DailyExpenses.route) {
                 val expenseViewModel: ExpenseViewModel = hiltViewModel()
                 DailyExpensesManagerScreen(
@@ -194,8 +178,6 @@ fun AppNavHost(
                     onNavigateToLogger = { navController.navigate(Screen.DailyExpenseLogger.route) }
                 )
             }
-
-            // 2. Daily Expense Logger Screen
             composable(Screen.DailyExpenseLogger.route) {
                 val expenseViewModel: ExpenseViewModel = hiltViewModel()
                 DailyExpenseLoggerScreen(
@@ -203,8 +185,6 @@ fun AppNavHost(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-
-            // 3. Recurring Expenses Manager Screen
             composable(Screen.RecurringExpenses.route) {
                 val expenseViewModel: ExpenseViewModel = hiltViewModel()
                 RecurringExpenseScreen(
@@ -213,8 +193,6 @@ fun AppNavHost(
                     onNavigateToAddRecurring = { navController.navigate(Screen.RecurringExpenseLogger.route) }
                 )
             }
-
-            // 4. Add Recurring Expense Screen
             composable(Screen.RecurringExpenseLogger.route) {
                 val expenseViewModel: ExpenseViewModel = hiltViewModel()
                 AddRecurringExpenseScreen(
@@ -223,52 +201,8 @@ fun AppNavHost(
                 )
             }
 
-            // --- Legacy Placeholders ---
-            composable(Screen.QuickExpense.route) { PlaceholderScreen(title = "Quick Expense Log") }
+            // --- Placeholders ---
             composable(Screen.CatchUp.route) { PlaceholderScreen(title = "Catch-Up Mode") }
-            composable(Screen.RecurringManager.route) { PlaceholderScreen(title = "Recurring & Subscriptions") }
-
-            composable(Screen.IncomeHub.route) {
-                val incomeViewModel: IncomeViewModel = koinViewModel()
-
-                IncomeDashboardScreen(
-                    incomeViewModel,
-                    onBack = {
-                        if (!navController.popBackStack()) {
-                            navController.navigate(Screen.Dashboard.route) {
-                                launchSingleTop = true
-                            }
-                        }
-                    },
-                    onLogIncome = {
-                        incomeViewModel.openLogger()
-                        navController.navigate(Screen.AddIncome.route) {
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-
-            composable(Screen.AddIncome.route) { entry ->
-                val incomeEntry = remember(entry) {
-                    navController.getBackStackEntry(Screen.IncomeHub.route)
-                }
-
-                val incomeViewModel: IncomeViewModel = koinViewModel(
-                    viewModelStoreOwner = incomeEntry
-                )
-
-                AddIncomeScreen(
-                    incomeViewModel,
-                    onBack = {
-                        navController.popBackStack()
-                    },
-                    onSaved = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            composable(Screen.GoalDetail.route) { PlaceholderScreen(title = "MacBook Goal Detail") }
         }
     }
 }

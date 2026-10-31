@@ -2,12 +2,15 @@ package com.sliit.se3092.GanuDenu.ui.analytics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SpendingAnalyticsViewModel : ViewModel() {
+@HiltViewModel
+class SpendingAnalyticsViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow<SpendingAnalyticsUiState>(SpendingAnalyticsUiState.Loading)
     val uiState: StateFlow<SpendingAnalyticsUiState> = _uiState.asStateFlow()

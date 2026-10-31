@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
@@ -118,7 +120,9 @@ private fun ProfileFormContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Top App Bar

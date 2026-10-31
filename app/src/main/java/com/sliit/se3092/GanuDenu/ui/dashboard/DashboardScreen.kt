@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 // Theme Colors
 private val ThemeBlack = Color(0xFF000000)
@@ -82,7 +84,9 @@ private fun DashboardContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
