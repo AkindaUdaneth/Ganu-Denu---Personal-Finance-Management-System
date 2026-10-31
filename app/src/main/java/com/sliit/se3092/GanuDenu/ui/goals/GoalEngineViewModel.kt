@@ -2,13 +2,16 @@ package com.sliit.se3092.GanuDenu.ui.goals
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class GoalEngineViewModel : ViewModel() {
+@HiltViewModel
+class GoalEngineViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow<GoalEngineUiState>(GoalEngineUiState.Loading)
     val uiState: StateFlow<GoalEngineUiState> = _uiState.asStateFlow()

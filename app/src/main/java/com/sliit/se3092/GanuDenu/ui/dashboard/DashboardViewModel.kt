@@ -2,17 +2,18 @@ package com.sliit.se3092.GanuDenu.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class DashboardViewModel : ViewModel() {
+@HiltViewModel
+class DashboardViewModel @Inject constructor() : ViewModel() {
 
-    // Internal mutable state - hidden from the UI layer
     private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
 
-    // Public immutable state - the Compose screen will observe this
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
