@@ -28,9 +28,6 @@ class GoalFormViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GoalFormUiState())
     val uiState: StateFlow<GoalFormUiState> = _uiState.asStateFlow()
 
-    // Hold onto the ID so we update the correct row!
-    private var currentGoalId: String = UUID.randomUUID().toString()
-
     init {
         loadActiveGoal()
     }
@@ -39,14 +36,10 @@ class GoalFormViewModel @Inject constructor(
         val userId = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
-            // Fetch the existing goal from Room to populate the form
-            val activeGoalList = repository.getAllGoals(userId).firstOrNull()
-            val activeGoal = activeGoalList?.firstOrNull()
+            val activeGoal = repository.getAllGoals(userId).firstOrNull()?.firstOrNull()
 
             if (activeGoal != null) {
-                currentGoalId = activeGoal.goalId // Lock in the existing ID
                 val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.US)
-
                 _uiState.update {
                     it.copy(
                         goalName = activeGoal.name,
@@ -56,7 +49,6 @@ class GoalFormViewModel @Inject constructor(
                     )
                 }
             } else {
-                // Fallback initial state if the database is completely empty
                 _uiState.update {
                     it.copy(
                         goalName = "MacBook M4 Pro",
@@ -70,34 +62,39 @@ class GoalFormViewModel @Inject constructor(
     }
 
     fun updateGoalName(name: String) = _uiState.update { it.copy(goalName = name) }
-
     fun updateTargetAmount(amount: String) = _uiState.update { it.copy(targetAmount = amount) }
-
     fun updateTargetDate(date: String) = _uiState.update { it.copy(targetDate = date) }
-
     fun updateCurrentSaved(saved: String) = _uiState.update { it.copy(currentSaved = saved) }
 
     fun saveGoal() {
         val userId = auth.currentUser?.uid ?: return
         val state = _uiState.value
 
-        val targetDateMillis = try {
-            SimpleDateFormat("MMMM dd, yyyy", Locale.US).parse(state.targetDate)?.time ?: System.currentTimeMillis()
-        } catch (e: Exception) {
-            System.currentTimeMillis()
-        }
-
-        // By passing the currentGoalId, Room knows to REPLACE the existing row
-        val goal = GoalEntity(
-            goalId = currentGoalId,
-            userId = userId,
-            name = state.goalName,
-            targetAmount = state.targetAmount.toDoubleOrNull() ?: 0.0,
-            currentSaved = state.currentSaved.toDoubleOrNull() ?: 0.0,
-            targetDate = targetDateMillis
-        )
-
         viewModelScope.launch {
+            // 1. Guarantee we fetch the real ID straight from the DB right now
+            val existingGoal = repository.getAllGoals(userId).firstOrNull()?.firstOrNull()
+            val goalIdToUse = existingGoal?.goalId ?: UUID.randomUUID().toString()
+
+            // 2. Safely parse the date, falling back to the existing DB date if the user typed gibberish
+            val cleanDate = state.targetDate.trim()
+            val targetDateMillis = try {
+                val format = SimpleDateFormat("MMMM dd, yyyy", Locale.US)
+                format.isLenient = true
+                format.parse(cleanDate)?.time ?: existingGoal?.targetDate ?: System.currentTimeMillis()
+            } catch (e: Exception) {
+                existingGoal?.targetDate ?: System.currentTimeMillis()
+            }
+
+            // 3. Build and save the entity
+            val goal = GoalEntity(
+                goalId = goalIdToUse, // This guarantees a REPLACE instead of an INSERT
+                userId = userId,
+                name = state.goalName.trim(),
+                targetAmount = state.targetAmount.trim().toDoubleOrNull() ?: existingGoal?.targetAmount ?: 0.0,
+                currentSaved = state.currentSaved.trim().toDoubleOrNull() ?: existingGoal?.currentSaved ?: 0.0,
+                targetDate = targetDateMillis
+            )
+
             repository.insertOrUpdateGoal(goal)
             _uiState.update { it.copy(showSuccessSnackbar = true) }
             delay(3000)
