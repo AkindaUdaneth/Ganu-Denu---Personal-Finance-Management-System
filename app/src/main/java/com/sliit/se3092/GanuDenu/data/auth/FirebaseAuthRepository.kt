@@ -3,6 +3,7 @@ package com.sliit.se3092.GanuDenu.data.auth
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -32,7 +33,6 @@ class FirebaseAuthRepository @Inject constructor(
 
     override suspend fun loadProfile(): UserProfile? {
         val identity = requireNotNull(currentIdentity) { "Please sign in again." }
-        // Require server confirmation before treating a pending profile write as saved.
         val snapshot = firestore.collection("users").document(identity.uid).get(Source.SERVER).await()
         return if (snapshot.exists()) UserProfile(
             uid = identity.uid,
@@ -46,18 +46,19 @@ class FirebaseAuthRepository @Inject constructor(
     override suspend fun createProfile(name: String, phone: String): UserProfile {
         val identity = requireNotNull(currentIdentity) { "Please sign in again." }
         val reference = firestore.collection("users").document(identity.uid)
-        // Retrying after a network interruption must not overwrite an existing profile.
-        firestore.runTransaction { transaction ->
-            if (!transaction.get(reference).exists()) {
-                transaction.set(reference, mapOf(
-                    "name" to name,
-                    "phone" to phone,
-                    "email" to identity.email,
-                    "preferredCurrency" to "LKR",
-                    "createdAt" to FieldValue.serverTimestamp()
-                ))
-            }
-        }.await()
+
+        // Removed the fragile runTransaction and replaced with a robust direct set
+        reference.set(
+            mapOf(
+                "name" to name,
+                "phone" to phone,
+                "email" to identity.email,
+                "preferredCurrency" to "LKR",
+                "updatedAt" to FieldValue.serverTimestamp()
+            ),
+            SetOptions.merge()
+        ).await()
+
         return requireNotNull(loadProfile()) { "Profile was not saved. Please retry." }
     }
 

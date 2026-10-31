@@ -108,9 +108,15 @@ fun AppNavHost(
                 )
             }
 
-            // --- Settings & Profile (Now using Hilt) ---
+            // --- Settings & Profile ---
             composable(Screen.Settings.route) {
                 val viewModel: SettingsViewModel = hiltViewModel()
+
+                // Force a fresh fetch from Firestore every time we navigate here
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    viewModel.loadProfileData()
+                }
+
                 SettingsScreen(
                     viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
