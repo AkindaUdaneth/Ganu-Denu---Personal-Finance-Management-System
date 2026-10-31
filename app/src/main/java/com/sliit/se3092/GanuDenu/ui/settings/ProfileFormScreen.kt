@@ -4,9 +4,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
@@ -29,8 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
@@ -45,11 +45,17 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState()
 
-    LaunchedEffect(state.showSuccessSnackbar) {
+    LaunchedEffect(state.showSuccessSnackbar, state.errorMessage) {
         if (state.showSuccessSnackbar) {
             snackbarHostState.showSnackbar(
                 message = "Profile updated successfully!",
                 duration = SnackbarDuration.Short
+            )
+            viewModel.dismissSnackbar()
+        } else if (state.errorMessage != null) {
+            snackbarHostState.showSnackbar(
+                message = "Error: ${state.errorMessage}",
+                duration = SnackbarDuration.Long
             )
             viewModel.dismissSnackbar()
         }
@@ -82,6 +88,7 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
             ProfileFormContent(
                 state = state,
                 onNameChange = viewModel::updateName,
+                onPhoneChange = viewModel::updatePhone,
                 onEmailChange = viewModel::updateEmail,
                 onNewPasswordChange = viewModel::updateNewPassword,
                 onConfirmPasswordChange = viewModel::updateConfirmPassword,
@@ -110,6 +117,7 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
 private fun ProfileFormContent(
     state: ProfileFormUiState,
     onNameChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
@@ -125,7 +133,6 @@ private fun ProfileFormContent(
             .imePadding(),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Top App Bar
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onCloseClick) {
                 Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
@@ -134,7 +141,6 @@ private fun ProfileFormContent(
             Text(text = "Edit Profile", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
-        // Profile Avatar & Button
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -156,13 +162,32 @@ private fun ProfileFormContent(
             }
         }
 
-        // Form Fields
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             GanuDenuExternalLabelTextField(
                 value = state.name,
                 onValueChange = onNameChange,
                 label = "Name",
                 keyboardType = KeyboardType.Text
+            )
+
+            // Fix: Use 'state.phone' instead of 'uiState.phone' and 'onPhoneChange' instead of 'viewModel::updatePhone'
+            OutlinedTextField(
+                value = state.phone,
+                onValueChange = onPhoneChange,
+                label = { Text("Phone Number", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = ThemeBlack,
+                    unfocusedContainerColor = ThemeBlack,
+                    focusedBorderColor = BorderGray,
+                    unfocusedBorderColor = BorderGray,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = ThemeYellow
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
             )
 
             GanuDenuExternalLabelTextField(
@@ -293,13 +318,14 @@ private fun ProfileFormPreview() {
     val mockState = ProfileFormUiState(
         name = "Kavindu",
         email = "kavindu123@gmail.com",
+        phone = "0712345678",
         newPassword = "password123",
         confirmPassword = "password123"
     )
 
     Scaffold(containerColor = ThemeBlack) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            ProfileFormContent(mockState, {}, {}, {}, {}, {}, {}, {})
+            ProfileFormContent(mockState, {}, {}, {}, {}, {}, {}, {}, {})
         }
     }
 }

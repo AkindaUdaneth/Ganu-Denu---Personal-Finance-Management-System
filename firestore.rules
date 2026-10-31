@@ -8,12 +8,16 @@ service cloud.firestore {
     function validProfile() {
       let data = request.resource.data;
       return data.keys().hasAll(['name', 'phone', 'email', 'preferredCurrency', 'createdAt'])
-        && data.keys().hasOnly(['name', 'phone', 'email', 'preferredCurrency', 'createdAt'])
+        // ALLOW the 'updatedAt' field to be written alongside the strict required fields
+        && data.keys().hasOnly(['name', 'phone', 'email', 'preferredCurrency', 'createdAt', 'updatedAt'])
         && data.name is string && data.name.size() > 0 && data.name.size() <= 80
-        && data.phone is string && data.phone.matches('^[+]?[0-9]{9,15}$')
+        // ALLOW empty strings in case the user hasn't provided a phone number yet
+        && data.phone is string && (data.phone == '' || data.phone.matches('^[+]?[0-9]{9,15}$'))
         && data.email is string && data.email == request.auth.token.email
         && data.preferredCurrency is string && data.preferredCurrency == 'LKR'
-        && data.createdAt is timestamp;
+        && data.createdAt is timestamp
+        // VALIDATE the updatedAt field only if it exists
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function validIncome() {

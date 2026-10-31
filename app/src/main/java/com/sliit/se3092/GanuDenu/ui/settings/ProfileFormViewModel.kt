@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,6 +35,7 @@ class ProfileFormViewModel @Inject constructor(
                     it.copy(
                         name = profile.name,
                         email = profile.email,
+                        phone = profile.phone,
                         newPassword = "",
                         confirmPassword = ""
                     )
@@ -43,6 +45,7 @@ class ProfileFormViewModel @Inject constructor(
     }
 
     fun updateName(name: String) = _uiState.update { it.copy(name = name) }
+    fun updatePhone(phone: String) = _uiState.update { it.copy(phone = phone) }
     fun updateEmail(email: String) = _uiState.update { it.copy(email = email) }
     fun updateNewPassword(pwd: String) = _uiState.update { it.copy(newPassword = pwd) }
     fun updateConfirmPassword(pwd: String) = _uiState.update { it.copy(confirmPassword = pwd) }
@@ -50,19 +53,17 @@ class ProfileFormViewModel @Inject constructor(
     fun saveProfile() {
         viewModelScope.launch {
             val state = _uiState.value
-
             try {
-                // 1. Update Firestore Profile (passing "" for phone to prevent crashes)
-                repository.createProfile(name = state.name.trim(), phone = "")
+                repository.createProfile(name = state.name.trim(), phone = state.phone.trim())
 
-                // 2. Update Firebase Auth Password if the user typed a matching pair
                 if (state.newPassword.isNotBlank() && state.newPassword == state.confirmPassword) {
-                    auth.currentUser?.updatePassword(state.newPassword)
+                    auth.currentUser?.updatePassword(state.newPassword)?.await()
                 }
 
                 _uiState.update {
                     it.copy(
                         showSuccessSnackbar = true,
+                        errorMessage = null,
                         newPassword = "",
                         confirmPassword = ""
                     )
@@ -70,13 +71,16 @@ class ProfileFormViewModel @Inject constructor(
                 delay(3000)
                 _uiState.update { it.copy(showSuccessSnackbar = false) }
             } catch (e: Exception) {
-                // In a production app, we would update the UI state with an error message here
+                e.printStackTrace()
+                _uiState.update { it.copy(errorMessage = e.message ?: "Failed to save profile. Check connection.") }
+                delay(4000)
+                _uiState.update { it.copy(errorMessage = null) }
             }
         }
     }
 
     fun dismissSnackbar() {
-        _uiState.update { it.copy(showSuccessSnackbar = false) }
+        _uiState.update { it.copy(showSuccessSnackbar = false, errorMessage = null) }
     }
 
     fun updatePhotoBottomSheetVisibility(isVisible: Boolean) {
