@@ -1,26 +1,36 @@
-# Ganu Denu - Personal Finance Management System
+# Ganu Denu (ගනුදෙනු) - Personal Finance Management System
 
 ## 1. Project Overview
-An Android personal finance system designed for multi-source, multi-currency income and frictionless expense tracking. Built for SE3092 Assignment 01.
+An advanced Android personal finance management system designed for multi-source, multi-currency income tracking, frictionless daily and recurring expense management, and real-time financial goal forecasting. Built for SE3092 Assignment 01.
 
-## 2. Architectural Summary
-- **UI:** Jetpack Compose (Material Design 3)
-- **Architecture:** Strict MVVM (Model-View-ViewModel)
-- **Asynchrony:** Kotlin Coroutines & StateFlow
-- **Dependency Injection:** One Koin setup provides Auth, Income, device biometric preferences and Settings dependencies.
-- **Persistence:** Firebase Authentication manages accounts; Firestore stores profiles at `users/{uid}` and income at `users/{uid}/incomes`. Other finance screens still use sample data and Room scaffolding.
+## 2. Architectural & Technical Summary
+- **UI & Design:** Jetpack Compose with Material Design 3, custom navigation graphs, and adaptive IME layout padding.
+- **Architecture:** Strict MVVM (Model-View-ViewModel) pattern with reactive Unidirectional Data Flow (UDF).
+- **Asynchrony:** Kotlin Coroutines and lifecycle-aware `StateFlow`.
+- **Dependency Injection (Hybrid Setup):** 
+  - **Hilt:** Manages ViewModels, Repositories, Room Database daos, and Settings/Goals modules.
+  - **Koin:** Manages Auth, Income tracking, and device biometric preference modules.
+- **Persistence & Cloud Sync:** 
+  - **Room Database (v3):** Local-first offline persistence supporting `ExpenseEntity`, `RecurringItemEntity`, and `GoalEntity`.
+  - **Firebase Authentication & Firestore:** Cloud-backed user profiles, income ledgers, and secure ownership rules (`isOwner`).
 
-## 3. Firebase Configuration Steps
-See [Firebase setup guide](docs/FIREBASE_SETUP.md) for console steps, security rules, proposed schema, and verification.
+## 3. Core Features
+- **Secure Authentication:** Email/password login, account registration, and optional device biometric preferences.
+- **Dynamic Goal Engine:** Real-time tracking for major targets (e.g., MacBook Pro M4 acquisition), interactive progress rings, and an **Impulse Checker** to simulate financial trade-offs.
+- **Income & Expense Hub:** Track confirmed vs. estimated cash flows, daily expenses, and active recurring subscriptions.
+- **Profile & Settings Manager:** Live cloud-synced user profiles (Name, Phone, Email, Currency) and account security controls.
 
-Add your group's real `app/google-services.json` to connect to its Firebase project. Login/signup and the Settings profile use real user data. See [authentication implementation and test guide](docs/AUTHENTICATION.md).
+## 4. Firebase Configuration Steps
+See [Firebase setup guide](docs/FIREBASE_SETUP.md) for console steps, custom security rules (`isOwner`, `validProfile`, `validIncome`), schema design, and verification.
 
-## 4. Build Instructions
+> ⚠️ **Important:** Ensure your group's real `app/google-services.json` is placed in the `app/` directory and Firestore security rules are published before building. See the [authentication guide](docs/AUTHENTICATION.md) and [income implementation docs](docs/INCOME.md).
+
+## 5. Build & Execution Instructions
 - **Minimum SDK:** API 26 (Android 8.0)
 - **Target SDK:** API 34+
-- Ensure `google-services.json` is placed in the `app/` directory before syncing Gradle.
+- **IDE:** Android Studio (Koala / Ladybug or newer recommended with Kotlin Multiplatform/Compose compiler support).
+- **Setup:** Clone the repository, sync Gradle with dependencies, ensure `google-services.json` is present, and run on an API 34+ emulator or physical device.
 
-## 5. Income Dashboard
-
-After login/signup, the Income tab displays real-time, user-scoped confirmed/estimated income and four overview cards. Log Income opens a separate Add Income page with common LKR amount/date/frequency/status fields for all four sources. Settings logout returns to login and disposes finance navigation. See [income implementation and verification](docs/INCOME.md). Publish the updated Firestore rules before testing income writes.
-
+## 6. Team Contributions & Navigation Flow
+- Authentication and Income Hub modules managed via Koin and Firestore.
+- Dashboard, Goal Engine, Room persistence, and Settings/Profile synchronization managed via Hilt and Jetpack Compose.
