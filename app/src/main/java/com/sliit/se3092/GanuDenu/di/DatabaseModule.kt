@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.sliit.se3092.GanuDenu.data.local.AppDatabase
 import com.sliit.se3092.GanuDenu.data.local.dao.ExpenseDao
+import com.sliit.se3092.GanuDenu.data.local.dao.GoalDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,5 +34,11 @@ object DatabaseModule {
     @Singleton
     fun provideExpenseDao(database: AppDatabase): ExpenseDao {
         return database.expenseDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGoalDao(database: AppDatabase): GoalDao {
+        return database.goalDao()
     }
 }
