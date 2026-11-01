@@ -121,6 +121,7 @@ private fun DashboardContent(
         )
 
         GoalProgressCard(
+            goalName = state.goalName,
             currentSaved = state.goalCurrentSaved,
             targetAmount = state.goalTargetAmount,
             requiredMonthly = state.requiredMonthlySavings,
@@ -228,7 +229,13 @@ private fun BehavioralSplitCard(committed: Double, discretionary: Double, onAnal
 }
 
 @Composable
-private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, requiredMonthly: Double, onGoalClick: () -> Unit) {
+private fun GoalProgressCard(
+    goalName: String,
+    currentSaved: Double,
+    targetAmount: Double,
+    requiredMonthly: Double,
+    onGoalClick: () -> Unit
+) {
     val format = NumberFormat.getNumberInstance(Locale.US)
     val progress = if (targetAmount > 0) (currentSaved / targetAmount).toFloat() else 0f
 
@@ -244,7 +251,7 @@ private fun GoalProgressCard(currentSaved: Double, targetAmount: Double, require
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("MacBook Pro M4 Goal", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(goalName, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text("LKR ${format.format(currentSaved)} / LKR ${format.format(targetAmount)}", color = Color.LightGray, fontSize = 14.sp)
 
             LinearProgressIndicator(
@@ -293,7 +300,7 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
                             .background(ThemeYellow, RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        val icon = when (sub.iconType) {
+                        val icon = when (sub.category) {
                             "GYM" -> Icons.Default.FitnessCenter
                             "SOFTWARE" -> Icons.Default.AutoAwesome
                             "TRANSPORT" -> Icons.Default.DirectionsCar
@@ -305,7 +312,7 @@ private fun ActiveSubscriptionsCard(subscriptions: List<SubscriptionItem>) {
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Text(sub.name, color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                    Text("LKR ${format.format(sub.costPerMonth)}/mo", color = Color.LightGray, fontSize = 12.sp)
+                    Text("LKR ${format.format(sub.amount)}/mo", color = Color.LightGray, fontSize = 12.sp)
                 }
             }
         }
@@ -320,6 +327,7 @@ private fun DashboardPreview() {
         estimatedIncome = 135000.0,
         committedSpent = 31320.0,
         discretionarySpent = 22680.0,
+        goalName = "MacBook M5 Pro",
         goalCurrentSaved = 11200.0,
         goalTargetAmount = 49000.0,
         requiredMonthlySavings = 39900.0,
