@@ -30,7 +30,7 @@ interface ExpenseDao {
     suspend fun deleteExpenseById(expenseId: String)
 
     // --- Recurring Expenses ---
-    @Query("SELECT * FROM recurring_items WHERE userId = :userId")
+    @Query("SELECT * FROM recurring_items WHERE userId = :userId ORDER BY name ASC")
     fun getActiveRecurringItems(userId: String): Flow<List<RecurringItemEntity>>
 
     @Query("SELECT * FROM recurring_items WHERE syncStatus = 'PENDING' AND userId = :userId")

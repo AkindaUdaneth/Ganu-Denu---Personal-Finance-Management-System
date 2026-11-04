@@ -110,7 +110,7 @@ class ExpenseViewModel @Inject constructor(
 
         return _uiState.value.copy(
             dailyExpenses = expenses,
-            recurringItems = recurringItems,
+            recurringItems = recurringItems.sortedWith(compareBy<RecurringItemEntity> { !it.isActive }.thenBy { it.name }),
             totalDailyToday = todaySum,
             totalDailyMonth = monthSum,
             committedOverheadMonthly = overheadMonthlySum,
