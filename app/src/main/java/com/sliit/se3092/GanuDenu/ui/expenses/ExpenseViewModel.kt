@@ -131,6 +131,7 @@ class ExpenseViewModel @Inject constructor(
         date: Long,
         onSuccess: () -> Unit
     ) {
+        if (date > System.currentTimeMillis() + 86400000L) return
         val currentUserId = auth.currentUser?.uid.orEmpty()
         viewModelScope.launch {
             val expense = ExpenseEntity(
