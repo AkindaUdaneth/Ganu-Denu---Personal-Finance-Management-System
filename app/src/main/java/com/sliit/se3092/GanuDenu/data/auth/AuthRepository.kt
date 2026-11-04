@@ -17,6 +17,7 @@ interface AuthRepository {
     val currentIdentity: AuthIdentity?
     suspend fun signIn(email: String, password: String)
     suspend fun register(email: String, password: String)
+    suspend fun signInWithGoogle(idToken: String)
     suspend fun loadProfile(): UserProfile?
     suspend fun createProfile(name: String, phone: String): UserProfile
     suspend fun sendPasswordReset(email: String)

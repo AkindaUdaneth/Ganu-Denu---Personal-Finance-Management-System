@@ -27,7 +27,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.sliit.se3092.GanuDenu.ui.theme.CanaryYellow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 internal val AuthYellow = CanaryYellow
 internal val AuthSurface = Color(0xFF1C1C1B)
@@ -88,5 +92,60 @@ internal fun AuthSubmitButton(label: String, busy: Boolean, onClick: () -> Unit)
         colors = ButtonDefaults.buttonColors(containerColor = AuthYellow, contentColor = Color.Black), shape = CircleShape) {
         if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = Color.Black, strokeWidth = 2.dp)
         else Text(label, color = Color.Black, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+internal fun GoogleAuthButton(label: String, busy: Boolean, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth().height(50.dp),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF555555)),
+        shape = CircleShape
+    ) {
+        if (busy) {
+            CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+        } else {
+            Text(label, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        }
+    }
+}
+
+internal fun launchGoogleSignIn(
+    context: android.content.Context,
+    scope: CoroutineScope,
+    onSuccess: (String) -> Unit,
+    onError: (String) -> Unit
+) {
+    val webClientId = context.getString(com.sliit.se3092.ganudenu.R.string.default_web_client_id)
+    val googleIdOption = GetGoogleIdOption.Builder()
+        .setServerClientId(webClientId)
+        .setFilterByAuthorizedAccounts(false)
+        .build()
+
+    val request = androidx.credentials.GetCredentialRequest.Builder()
+        .addCredentialOption(googleIdOption)
+        .build()
+
+    scope.launch {
+        try {
+            val credentialManager = androidx.credentials.CredentialManager.create(context)
+            val result = credentialManager.getCredential(context, request)
+            val credential = result.credential
+            if (credential is androidx.credentials.CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                onSuccess(googleIdTokenCredential.idToken)
+            } else {
+                onError("Unexpected credential type")
+            }
+        } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+            onError(e.localizedMessage ?: "Google sign-in failed")
+        } catch (e: Exception) {
+            onError(e.localizedMessage ?: "Google sign-in failed")
+        }
     }
 }

@@ -97,6 +97,41 @@ class AuthViewModel(
         viewModelScope.launch { restoreSession() }
     }
 
+    fun signInWithGoogle(idToken: String) {
+        val state = _uiState.value
+        if (state.busy) return
+        _uiState.update { it.copy(busy = true, error = null, message = null) }
+        viewModelScope.launch {
+            try {
+                withTimeout(25_000) {
+                    repository.signInWithGoogle(idToken)
+                    handledUid = repository.currentIdentity?.uid
+                    val profile = repository.loadProfile()
+                    if (profile == null) {
+                        val currentUser = repository.currentIdentity
+                        _uiState.update { it.copy(
+                            session = AuthSession.NEEDS_PROFILE,
+                            busy = false,
+                            email = currentUser?.email.orEmpty(),
+                            name = currentUser?.email?.substringBefore('@')?.replaceFirstChar { c -> c.uppercase() } ?: ""
+                        ) }
+                    } else {
+                        finishSession(profile)
+                    }
+                }
+            } catch (exception: Exception) {
+                if (exception is CancellationException && exception !is TimeoutCancellationException) throw exception
+                val hasAccount = repository.currentIdentity != null
+                handledUid = repository.currentIdentity?.uid
+                _uiState.update { it.copy(
+                    busy = false,
+                    session = if (hasAccount) AuthSession.NEEDS_PROFILE else AuthSession.SIGNED_OUT,
+                    error = friendlyError(exception)
+                ) }
+            }
+        }
+    }
+
     private suspend fun restoreSession() {
         val identity = repository.currentIdentity ?: return
         handledUid = identity.uid
