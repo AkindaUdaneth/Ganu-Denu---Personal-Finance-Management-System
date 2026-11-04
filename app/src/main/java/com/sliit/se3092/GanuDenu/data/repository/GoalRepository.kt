@@ -28,7 +28,6 @@ class GoalRepository @Inject constructor(
 
         // 2. Sync to Firestore in the background
         if (goal.userId.isBlank()) return
-        try {
             val goalData = hashMapOf(
                 "goalId" to goal.goalId,
                 "userId" to goal.userId,
@@ -43,8 +42,6 @@ class GoalRepository @Inject constructor(
                 .document(goal.goalId)
                 .set(goalData, SetOptions.merge())
                 .await()
-        } catch (e: Exception) {
-        }
     }
 
     suspend fun fetchRemoteGoals(userId: String) {

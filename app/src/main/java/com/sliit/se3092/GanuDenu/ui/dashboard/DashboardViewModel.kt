@@ -37,12 +37,18 @@ class DashboardViewModel @Inject constructor(
         val userId = auth.currentUser?.uid ?: return
         val currentMonth = YearMonth.now()
 
+        // 1. Launch remote syncs in a separate background coroutine
         viewModelScope.launch {
-            // Fetch remote data to ensure Room is up-to-date
-            expenseRepository.fetchRemoteExpenses(userId)
-            goalRepository.fetchRemoteGoals(userId)
+            try {
+                expenseRepository.fetchRemoteExpenses(userId)
+                goalRepository.fetchRemoteGoals(userId)
+            } catch (e: Exception) {
+                // Silently ignore offline network errors
+            }
+        }
 
-            // Combine Goal, Expense, Recurring, and Income flows
+        // 2. Launch the local Room database observation immediately
+        viewModelScope.launch {
             combine(
                 goalRepository.getAllGoals(userId),
                 expenseRepository.getAllExpenses(userId),
@@ -54,16 +60,18 @@ class DashboardViewModel @Inject constructor(
                 val activeGoal = goals.firstOrNull()
                 val requiredMonthly = if (activeGoal != null) {
                     val now = Calendar.getInstance().timeInMillis
-                    val msDiff = activeGoal.targetDate - now
+
+                    val msDiff = kotlin.math.max(0L, activeGoal.targetDate - now)
+
                     val monthsRemaining = (msDiff / (1000L * 60 * 60 * 24 * 30)).toInt().coerceAtLeast(1)
                     val remainingAmount = activeGoal.targetAmount - activeGoal.currentSaved
-                    if (monthsRemaining > 0) remainingAmount / monthsRemaining else 0.0
+
+                    if (remainingAmount > 0) remainingAmount / monthsRemaining else 0.0
                 } else {
                     0.0
                 }
 
                 // 2. Process Expenses
-                // Filter for current month's expenses
                 val monthStart = Calendar.getInstance().apply {
                     set(Calendar.DAY_OF_MONTH, 1)
                     set(Calendar.HOUR_OF_DAY, 0)
@@ -99,7 +107,6 @@ class DashboardViewModel @Inject constructor(
                         )
                     }
 
-                // Push to UI State
                 DashboardUiState.Success(
                     confirmedBalance = currentBalance,
                     estimatedIncome = estimatedIncome,
@@ -114,7 +121,6 @@ class DashboardViewModel @Inject constructor(
             }
                 .catch { e ->
                     e.printStackTrace()
-                    // Fail gracefully, keep UI loading or handle error
                 }
                 .collect { newState ->
                     _uiState.value = newState
