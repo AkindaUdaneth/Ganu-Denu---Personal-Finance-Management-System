@@ -40,7 +40,7 @@ No composite indexes are needed for profile access by UID. Single-field indexes 
 
 ## Remaining application integration
 
-Login/signup, Auth repository, profile saving, password reset, session management, Koin, biometric unlock and Settings logout/profile display are implemented. See [authentication guide](AUTHENTICATION.md).
+Login/signup, Auth repository, profile saving, password reset, session management, Koin and Settings logout/profile display are implemented. See [authentication guide](AUTHENTICATION.md).
 
 - Add user-scoped Firestore repositories and connect the existing screens through ViewModels.
 - Observe dashboard data with snapshot listeners; remove listeners when observation ends or a user signs out.

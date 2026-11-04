@@ -1,8 +1,6 @@
 package com.sliit.se3092.GanuDenu.ui.auth
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
@@ -20,17 +18,18 @@ import androidx.compose.ui.unit.sp
 /** Registration and retryable profile completion, separate from the login form. */
 @Composable
 internal fun SignUpScreen(
-    state: AuthUiState, viewModel: AuthViewModel, biometricAvailable: Boolean, profileOnly: Boolean = false
+    state: AuthUiState, viewModel: AuthViewModel, profileOnly: Boolean = false
 ) {
     val focus = LocalFocusManager.current
     val submit = { focus.clearFocus(); viewModel.submit() }
     AuthFormContainer {
-        Spacer(Modifier.height(44.dp))
+        Text("Ganu Denu", color = AuthYellow, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(14.dp))
         Text(if (profileOnly) "Complete your profile" else "Create Account", color = Color.White,
             fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        if (profileOnly) Text("Your account exists. Add your details to finish setup.", color = Color.LightGray,
+        Text(if (profileOnly) "Add your details to finish setup." else "Create a profile to start tracking your finances.", color = Color.LightGray,
             modifier = Modifier.padding(top = 12.dp))
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(20.dp))
         AuthField("Name", state.name, viewModel::updateName, "Your full name", state.nameError, !state.busy)
         Spacer(Modifier.height(14.dp))
         AuthField("Phone number", state.phone, viewModel::updatePhone, "+94 71 123 4567", state.phoneError, !state.busy,
@@ -42,9 +41,7 @@ internal fun SignUpScreen(
             Spacer(Modifier.height(14.dp))
             AuthField("Password", state.password, viewModel::updatePassword, "At least 6 characters", state.passwordError, !state.busy,
                 password = true, leadingIcon = Icons.Outlined.Lock, imeAction = ImeAction.Done, onDone = submit)
-            Spacer(Modifier.height(20.dp))
         }
-        BiometricOption(state.biometricEnabled, state.busy, biometricAvailable, viewModel::updateBiometric)
         AuthFeedback(state.error, state.message)
         Spacer(Modifier.height(18.dp))
         AuthSubmitButton(if (profileOnly) "Save Profile" else "Create Account", state.busy, submit)
@@ -52,12 +49,6 @@ internal fun SignUpScreen(
             Text(if (profileOnly) "Sign out" else "Already have an account? ", color = Color.White, fontSize = 12.sp)
             if (!profileOnly) Text("Sign in", color = AuthYellow, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
-        if (!profileOnly) {
-            Row(Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                Box(Modifier.size(20.dp).background(AuthYellow, CircleShape))
-                Box(Modifier.size(20.dp).background(AuthYellow, CircleShape))
-            }
-        }
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(20.dp))
     }
 }

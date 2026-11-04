@@ -7,7 +7,6 @@ import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.sliit.se3092.GanuDenu.data.auth.AuthRepository
-import com.sliit.se3092.GanuDenu.data.auth.BiometricPreferences
 import com.sliit.se3092.GanuDenu.data.auth.UserProfile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -18,8 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 class AuthViewModel(
-    private val repository: AuthRepository,
-    private val biometricPreferences: BiometricPreferences
+    private val repository: AuthRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
@@ -43,8 +41,6 @@ class AuthViewModel(
     fun updatePhone(value: String) = _uiState.update { it.copy(phone = value, phoneError = null, error = null) }
     fun updateEmail(value: String) = _uiState.update { it.copy(email = value, emailError = null, error = null) }
     fun updatePassword(value: String) = _uiState.update { it.copy(password = value, passwordError = null, error = null) }
-    fun updateBiometric(value: Boolean) = _uiState.update { it.copy(biometricEnabled = value) }
-    fun showMessage(value: String) = _uiState.update { it.copy(message = value) }
 
     fun switchMode(signingUp: Boolean) {
         if (_uiState.value.busy) return
@@ -74,13 +70,13 @@ class AuthViewModel(
                         else repository.signIn(state.email.trim(), state.password)
                     }
                     // The SDK callback may arrive after this coroutine finishes. Do not
-                    // let that duplicate event replace profile errors or biometric gating.
+                    // let that duplicate event replace profile errors.
                     handledUid = repository.currentIdentity?.uid
                     val profile = if (needsDetails) repository.createProfile(state.name.trim(), AuthValidation.normalizePhone(state.phone))
                         else repository.loadProfile()
                     if (profile == null) {
                         _uiState.update { it.copy(session = AuthSession.NEEDS_PROFILE, busy = false, password = "", error = null) }
-                    } else completeSession(profile, state.biometricEnabled)
+                    } else finishSession(profile)
                 }
             } catch (exception: Exception) {
                 if (exception is CancellationException && exception !is TimeoutCancellationException) throw exception
@@ -108,43 +104,15 @@ class AuthViewModel(
         try {
             val profile = withTimeout(25_000) { repository.loadProfile() }
             if (profile == null) _uiState.update { it.copy(session = AuthSession.NEEDS_PROFILE, email = identity.email, busy = false) }
-            else _uiState.update { it.copy(
-                session = if (biometricPreferences.isEnabled(identity.uid)) AuthSession.LOCKED else AuthSession.SIGNED_IN,
-                profile = profile, email = profile.email, busy = false, password = ""
-            ) }
+            else finishSession(profile)
         } catch (exception: Exception) {
             if (exception is CancellationException && exception !is TimeoutCancellationException) throw exception
             _uiState.update { it.copy(session = AuthSession.ERROR, busy = false, error = friendlyError(exception)) }
         }
     }
 
-    private fun completeSession(profile: UserProfile, enableBiometric: Boolean) {
-        if (!enableBiometric) biometricPreferences.setEnabled(profile.uid, false)
-        _uiState.update { it.copy(
-            session = if (enableBiometric) AuthSession.LOCKED else AuthSession.SIGNED_IN,
-            profile = profile, email = profile.email, password = "", busy = false,
-            biometricEnrollment = enableBiometric, error = null
-        ) }
-    }
-
-    fun biometricSucceeded() {
-        val state = _uiState.value
-        if (state.session != AuthSession.LOCKED) return
-        state.profile?.let { biometricPreferences.setEnabled(it.uid, true) }
-        _uiState.update { it.copy(session = AuthSession.SIGNED_IN, biometricEnrollment = false, message = null) }
-    }
-
-    fun skipBiometricEnrollment() {
-        if (!_uiState.value.biometricEnrollment) return
-        _uiState.value.profile?.let { biometricPreferences.setEnabled(it.uid, false) }
-        _uiState.update { it.copy(session = AuthSession.SIGNED_IN, biometricEnrollment = false, biometricEnabled = false) }
-    }
-
-    fun lockIfEnabled() {
-        val state = _uiState.value
-        if (state.session == AuthSession.SIGNED_IN && state.profile?.let { biometricPreferences.isEnabled(it.uid) } == true) {
-            _uiState.update { it.copy(session = AuthSession.LOCKED, biometricEnrollment = false) }
-        }
+    private fun finishSession(profile: UserProfile) {
+        _uiState.value = AuthUiState(session = AuthSession.SIGNED_IN, profile = profile, email = profile.email)
     }
 
     fun signOut() {

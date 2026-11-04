@@ -4,8 +4,6 @@ import android.app.Application
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sliit.se3092.GanuDenu.data.auth.AuthRepository
-import com.sliit.se3092.GanuDenu.data.auth.BiometricPreferences
-import com.sliit.se3092.GanuDenu.data.auth.DeviceBiometricPreferences
 import com.sliit.se3092.GanuDenu.data.auth.FirebaseAuthRepository
 import com.sliit.se3092.GanuDenu.data.income.FirestoreIncomeRepository
 import com.sliit.se3092.GanuDenu.data.income.IncomeRepository
@@ -29,8 +27,7 @@ class GanuDenuApp : Application() {
                 single { FirebaseFirestore.getInstance() }
                 single<AuthRepository> { FirebaseAuthRepository(get(), get()) }
                 single<IncomeRepository> { FirestoreIncomeRepository(get(), get()) }
-                single<BiometricPreferences> { DeviceBiometricPreferences(androidContext()) }
-                viewModel { AuthViewModel(get(), get()) }
+                viewModel { AuthViewModel(get()) }
                 viewModel { SettingsViewModel(get()) }
                 viewModel { IncomeViewModel(get()) }
             })

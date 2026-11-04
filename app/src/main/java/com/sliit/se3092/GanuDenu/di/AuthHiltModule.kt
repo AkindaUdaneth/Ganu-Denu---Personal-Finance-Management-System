@@ -1,8 +1,6 @@
 package com.sliit.se3092.GanuDenu.di
 
 import com.sliit.se3092.GanuDenu.data.auth.AuthRepository
-import com.sliit.se3092.GanuDenu.data.auth.BiometricPreferences
-import com.sliit.se3092.GanuDenu.data.auth.DeviceBiometricPreferences
 import com.sliit.se3092.GanuDenu.data.auth.FirebaseAuthRepository
 import dagger.Binds
 import dagger.Module
@@ -17,9 +15,4 @@ abstract class AuthHiltModule {
     abstract fun bindAuthRepository(
         impl: FirebaseAuthRepository
     ): AuthRepository
-
-    @Binds
-    abstract fun bindBiometricPreferences(
-        impl: DeviceBiometricPreferences
-    ): BiometricPreferences
 }

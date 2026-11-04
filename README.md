@@ -9,13 +9,13 @@ An advanced Android personal finance management system designed for multi-source
 - **Asynchrony:** Kotlin Coroutines and lifecycle-aware `StateFlow`.
 - **Dependency Injection (Hybrid Setup):** 
   - **Hilt:** Manages ViewModels, Repositories, Room Database daos, and Settings/Goals modules.
-  - **Koin:** Manages Auth, Income tracking, and device biometric preference modules.
+  - **Koin:** Manages Auth and Income tracking modules.
 - **Persistence & Cloud Sync:** 
   - **Room Database (v3):** Local-first offline persistence supporting `ExpenseEntity`, `RecurringItemEntity`, and `GoalEntity`.
   - **Firebase Authentication & Firestore:** Cloud-backed user profiles, income ledgers, and secure ownership rules (`isOwner`).
 
 ## 3. Core Features
-- **Secure Authentication:** Email/password login, account registration, and optional device biometric preferences.
+- **Secure Authentication:** Email/password login and account registration.
 - **Dynamic Goal Engine:** Real-time tracking for major targets (e.g., MacBook Pro M4 acquisition), interactive progress rings, and an **Impulse Checker** to simulate financial trade-offs.
 - **Income & Expense Hub:** Track confirmed vs. estimated cash flows, daily expenses, and active recurring subscriptions.
 - **Profile & Settings Manager:** Live cloud-synced user profiles (Name, Phone, Email, Currency) and account security controls.

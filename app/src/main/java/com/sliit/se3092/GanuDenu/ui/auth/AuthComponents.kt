@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
@@ -28,8 +27,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sliit.se3092.GanuDenu.ui.theme.CanaryYellow
 
-internal val AuthYellow = Color(0xFFFFEF46)
+internal val AuthYellow = CanaryYellow
 internal val AuthSurface = Color(0xFF1C1C1B)
 
 @Composable
@@ -66,27 +66,14 @@ internal fun AuthField(
 
 @Composable
 internal fun AuthFormContainer(content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp).widthIn(max = 480.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        content = content
-    )
-}
-
-@Composable
-internal fun BiometricOption(checked: Boolean, busy: Boolean, available: Boolean, onChange: (Boolean) -> Unit) {
-    Surface(color = AuthSurface, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Fingerprint, contentDescription = null, tint = AuthYellow, modifier = Modifier.size(28.dp))
-            Text("Biometric Unlock", color = Color.White, fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).padding(start = 12.dp))
-            Switch(checked = checked, onCheckedChange = onChange, enabled = !busy && available,
-                colors = SwitchDefaults.colors(checkedTrackColor = AuthYellow, checkedThumbColor = Color.Black))
-        }
+    Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            Modifier.widthIn(max = 480.dp).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            content = content
+        )
     }
-    if (!available) Text("Set up biometrics in device settings to enable unlock.", color = Color.Gray,
-        fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
 }
 
 @Composable
