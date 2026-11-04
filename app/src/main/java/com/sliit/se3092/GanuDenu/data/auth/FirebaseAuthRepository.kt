@@ -1,6 +1,7 @@
 package com.sliit.se3092.GanuDenu.data.auth
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -29,6 +30,11 @@ class FirebaseAuthRepository @Inject constructor(
 
     override suspend fun register(email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password).await()
+    }
+
+    override suspend fun signInWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential).await()
     }
 
     override suspend fun loadProfile(): UserProfile? {

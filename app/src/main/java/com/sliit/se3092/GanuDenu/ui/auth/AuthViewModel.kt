@@ -30,7 +30,9 @@ class AuthViewModel(
                 if (!_uiState.value.busy) {
                     if (identity == null) {
                         handledUid = null
-                        _uiState.value = AuthUiState(session = AuthSession.SIGNED_OUT)
+                        _uiState.update { current ->
+                            AuthUiState(session = AuthSession.SIGNED_OUT, error = current.error)
+                        }
                     } else if (identity.uid != handledUid) restoreSession()
                 }
             }
@@ -95,6 +97,50 @@ class AuthViewModel(
     fun retrySession() {
         if (_uiState.value.busy) return
         viewModelScope.launch { restoreSession() }
+    }
+
+    fun signInWithGoogle(idToken: String, isSignUp: Boolean = false) {
+        val state = _uiState.value
+        if (state.busy) return
+        _uiState.update { it.copy(busy = true, error = null, message = null) }
+        viewModelScope.launch {
+            try {
+                withTimeout(25_000) {
+                    repository.signInWithGoogle(idToken)
+                    handledUid = repository.currentIdentity?.uid
+                    val profile = repository.loadProfile()
+                    if (profile == null) {
+                        if (!isSignUp) {
+                            repository.signOut()
+                            _uiState.update { it.copy(
+                                busy = false,
+                                session = AuthSession.SIGNED_OUT,
+                                error = "No account found with this Google email. Please create an account first."
+                            ) }
+                        } else {
+                            val currentUser = repository.currentIdentity
+                            _uiState.update { it.copy(
+                                session = AuthSession.NEEDS_PROFILE,
+                                busy = false,
+                                email = currentUser?.email.orEmpty(),
+                                name = currentUser?.email?.substringBefore('@')?.replaceFirstChar { c -> c.uppercase() } ?: ""
+                            ) }
+                        }
+                    } else {
+                        finishSession(profile)
+                    }
+                }
+            } catch (exception: Exception) {
+                if (exception is CancellationException && exception !is TimeoutCancellationException) throw exception
+                val hasAccount = repository.currentIdentity != null
+                handledUid = repository.currentIdentity?.uid
+                _uiState.update { it.copy(
+                    busy = false,
+                    session = if (hasAccount && isSignUp) AuthSession.NEEDS_PROFILE else AuthSession.SIGNED_OUT,
+                    error = friendlyError(exception)
+                ) }
+            }
+        }
     }
 
     private suspend fun restoreSession() {

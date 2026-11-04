@@ -21,7 +21,18 @@ internal fun SignUpScreen(
     state: AuthUiState, viewModel: AuthViewModel, profileOnly: Boolean = false
 ) {
     val focus = LocalFocusManager.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     val submit = { focus.clearFocus(); viewModel.submit() }
+    val googleSignup = {
+        focus.clearFocus()
+        launchGoogleSignIn(
+            context = context,
+            scope = coroutineScope,
+            onSuccess = { idToken -> viewModel.signInWithGoogle(idToken, isSignUp = true) },
+            onError = {}
+        )
+    }
     AuthFormContainer {
         Text("Ganu Denu", color = AuthYellow, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(14.dp))
@@ -45,6 +56,10 @@ internal fun SignUpScreen(
         AuthFeedback(state.error, state.message)
         Spacer(Modifier.height(18.dp))
         AuthSubmitButton(if (profileOnly) "Save Profile" else "Create Account", state.busy, submit)
+        if (!profileOnly) {
+            Spacer(Modifier.height(12.dp))
+            GoogleAuthButton("Sign up with Google", state.busy, googleSignup)
+        }
         TextButton(onClick = { if (profileOnly) viewModel.signOut() else viewModel.switchMode(false) }, enabled = !state.busy) {
             Text(if (profileOnly) "Sign out" else "Already have an account? ", color = Color.White, fontSize = 12.sp)
             if (!profileOnly) Text("Sign in", color = AuthYellow, fontSize = 12.sp, fontWeight = FontWeight.Bold)
