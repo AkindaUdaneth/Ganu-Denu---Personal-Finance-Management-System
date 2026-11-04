@@ -108,3 +108,22 @@ fun scheduleRecurringExpenseReminder(
         // Safe fallback
     }
 }
+
+fun cancelRecurringExpenseReminder(
+    context: Context,
+    title: String
+) {
+    try {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, ExpenseReminderReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            title.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
+    } catch (_: Exception) {
+        // Safe fallback
+    }
+}
