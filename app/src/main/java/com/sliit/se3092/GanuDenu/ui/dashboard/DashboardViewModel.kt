@@ -40,6 +40,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             // Fetch remote data to ensure Room is up-to-date
             expenseRepository.fetchRemoteExpenses(userId)
+            goalRepository.fetchRemoteGoals(userId)
 
             // Combine Goal, Expense, Recurring, and Income flows
             combine(
