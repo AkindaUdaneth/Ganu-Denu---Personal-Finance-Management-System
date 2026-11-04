@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 
 // Theme Colors
 private val ThemeBlack = Color(0xFF000000)
@@ -203,25 +204,37 @@ private fun BehavioralSplitCard(committed: Double, discretionary: Double, onAnal
                     .fillMaxWidth()
                     .height(40.dp)
                     .background(Color(0xFF27272A), RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(20.dp))
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(committedWeight)
-                        .fillMaxHeight(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Committed", color = Color.White, fontSize = 14.sp)
+                // Only render the Committed box if it has a valid weight
+                if (committedWeight > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .weight(committedWeight)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Hide text if the segment is too small to fit the label
+                        if (committedWeight > 0.15f || total == 0.0) {
+                            Text("Committed", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .weight(discretionaryWeight)
-                        .fillMaxHeight()
-                        .background(ThemeYellow, RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
-                        .clickable { onAnalyticsClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Discretionary", color = ThemeBlack, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                // Only render the Discretionary box if it has a valid weight
+                if (discretionaryWeight > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .weight(discretionaryWeight)
+                            .fillMaxHeight()
+                            .background(ThemeYellow)
+                            .clickable { onAnalyticsClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (discretionaryWeight > 0.15f || total == 0.0) {
+                            Text("Discretionary", color = ThemeBlack, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
                 }
             }
         }
