@@ -38,11 +38,11 @@ class GoalEngineViewModel @Inject constructor(
 
                     if (activeGoal != null) {
                         val now = Calendar.getInstance().timeInMillis
-                        val msDiff = activeGoal.targetDate - now
+                        val msDiff = kotlin.math.max(0L, activeGoal.targetDate - now)
                         val monthsRemaining = (msDiff / (1000L * 60 * 60 * 24 * 30)).toInt().coerceAtLeast(1)
 
                         val remainingAmount = activeGoal.targetAmount - activeGoal.currentSaved
-                        val requiredMonthly = if (monthsRemaining > 0) remainingAmount / monthsRemaining else 0.0
+                        val requiredMonthly = if (remainingAmount > 0) remainingAmount / monthsRemaining else 0.0
                         val progress = if (activeGoal.targetAmount > 0) (activeGoal.currentSaved / activeGoal.targetAmount) * 100 else 0.0
 
                         val currentImpulse = (_uiState.value as? GoalEngineUiState.Success)?.impulseExpenseInput ?: ""
