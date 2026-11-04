@@ -34,6 +34,33 @@ class IncomeViewModelTest {
         assertEquals(4, vm.uiState.value.cards.size)
     }
 
+    @Test fun selectingAnEarlierMonthUsesItsOwnTotalsAndSurvivesResume() = runTest(dispatcher) {
+        val current = YearMonth.now()
+        val previous = current.minusMonths(1)
+        repository.monthEvents[previous] = MutableStateFlow(
+            IncomeSnapshot(listOf(entry(90000).copy(date = previous.atDay(15))))
+        )
+        repository.events.value = IncomeSnapshot(listOf(entry(25000)))
+
+        val vm = IncomeViewModel(repository)
+        runCurrent()
+        assertEquals(25000L, vm.uiState.value.summary.confirmedMinor)
+
+        vm.selectMonth(previous)
+        assertTrue(vm.uiState.value.loading)
+        assertEquals(0L, vm.uiState.value.summary.confirmedMinor)
+        runCurrent()
+        vm.refreshMonth()
+        runCurrent()
+        assertEquals(previous, vm.uiState.value.month)
+        assertEquals(90000L, vm.uiState.value.summary.confirmedMinor)
+
+        vm.selectMonth(current)
+        runCurrent()
+        assertEquals(current, vm.uiState.value.month)
+        assertEquals(25000L, vm.uiState.value.summary.confirmedMinor)
+    }
+
     @Test fun invalidFormDoesNotWriteAndValidFormClosesAfterSave() = runTest(dispatcher) {
         val vm = IncomeViewModel(repository)
         runCurrent()
@@ -114,11 +141,12 @@ class IncomeViewModelTest {
 
 private class FakeIncomeRepository : IncomeRepository {
     val events = MutableStateFlow(IncomeSnapshot())
+    val monthEvents = mutableMapOf<YearMonth, MutableStateFlow<IncomeSnapshot>>()
     var fail = false
     var attempts = 0
     var signInRequired = false
     val saved = mutableMapOf<String, IncomeEntry>()
-    override fun observeMonth(month: YearMonth) = events
+    override fun observeMonth(month: YearMonth) = monthEvents[month] ?: events
     override suspend fun save(entry: IncomeEntry) {
         attempts++
         if (signInRequired) throw IncomeSignInRequiredException()

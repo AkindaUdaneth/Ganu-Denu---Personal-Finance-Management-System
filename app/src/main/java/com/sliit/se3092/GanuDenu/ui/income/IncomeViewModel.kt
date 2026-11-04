@@ -32,15 +32,17 @@ class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(IncomeUiState())
     val uiState = _uiState.asStateFlow()
     private var observation: Job? = null
+    private var followsCurrentMonth = true
 
     init { retry() }
 
     fun retry() {
         observation?.cancel()
         _uiState.update { it.copy(loading = true, error = null) }
+        val month = _uiState.value.month
         observation = viewModelScope.launch {
             try {
-                repository.observeMonth(_uiState.value.month).collect { snapshot ->
+                repository.observeMonth(month).collect { snapshot ->
                     val summary = IncomeSummary.from(snapshot.entries)
                     _uiState.update { it.copy(loading = false, snapshot = snapshot,
                         summary = summary, cards = incomeCards(summary), error = null) }
@@ -53,11 +55,25 @@ class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
     }
 
     fun refreshMonth() {
-        val month = YearMonth.now()
-        if (_uiState.value.month != month) {
-            _uiState.update { it.copy(month = month, snapshot = IncomeSnapshot(), summary = IncomeSummary.from(emptyList()), cards = incomeCards(IncomeSummary.from(emptyList()))) }
-            retry()
+        if (followsCurrentMonth) showMonth(YearMonth.now())
+    }
+
+    fun selectMonth(month: YearMonth) {
+        followsCurrentMonth = month == YearMonth.now()
+        showMonth(month)
+    }
+
+    private fun showMonth(month: YearMonth) {
+        if (_uiState.value.month == month) return
+        observation?.cancel()
+        val emptySummary = IncomeSummary.from(emptyList())
+        _uiState.update {
+            it.copy(
+                month = month, loading = true, snapshot = IncomeSnapshot(),
+                summary = emptySummary, cards = incomeCards(emptySummary), error = null, message = null
+            )
         }
+        retry()
     }
 
     fun openLogger(source: IncomeSource = IncomeSource.SALARY) {
