@@ -74,6 +74,9 @@ class ExpenseViewModel @Inject constructor(
         val currentMonth = now.get(Calendar.MONTH)
         val currentDay = now.get(Calendar.DAY_OF_YEAR)
 
+        val monthFormat = java.text.SimpleDateFormat("MMMM", Locale.getDefault())
+        val currentMonthName = monthFormat.format(now.time)
+
         var todaySum = 0.0
         var monthSum = 0.0
 
@@ -111,6 +114,7 @@ class ExpenseViewModel @Inject constructor(
             totalDailyToday = todaySum,
             totalDailyMonth = monthSum,
             committedOverheadMonthly = overheadMonthlySum,
+            currentMonthName = currentMonthName,
             isLoading = false,
             errorMessage = null
         )
