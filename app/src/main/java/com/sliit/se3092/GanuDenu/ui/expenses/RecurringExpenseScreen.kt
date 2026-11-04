@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.sliit.se3092.GanuDenu.data.local.entity.RecurringItemEntity
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -39,6 +41,7 @@ fun RecurringExpenseScreen(
     onNavigateToAddRecurring: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     RecurringExpenseContent(
         committedOverheadMonthly = state.committedOverheadMonthly,
@@ -48,7 +51,21 @@ fun RecurringExpenseScreen(
         },
         onNavigateBack = onNavigateBack,
         onNavigateToAddRecurring = onNavigateToAddRecurring,
-        onToggleStatus = { item -> viewModel.toggleRecurringStatus(item) }
+        onToggleStatus = { item ->
+            viewModel.toggleRecurringStatus(item)
+            val willBeActive = !item.isActive
+            if (willBeActive) {
+                val dueDay = try {
+                    val cal = Calendar.getInstance().apply { timeInMillis = item.nextDueDate }
+                    cal.get(Calendar.DAY_OF_MONTH)
+                } catch (e: Exception) {
+                    25
+                }
+                scheduleRecurringExpenseReminder(context, item.name, item.amount, dueDay)
+            } else {
+                cancelRecurringExpenseReminder(context, item.name)
+            }
+        }
     )
 }
 
