@@ -41,22 +41,30 @@ fun DailyExpensesManagerScreen(
 
     DailyExpensesManagerContent(
         totalMonthAmount = state.totalDailyMonth,
+        currentMonthName = state.currentMonthName.ifBlank { "November" },
         expenses = state.dailyExpenses,
         onNavigateBack = onNavigateBack,
         onNavigateToLogger = onNavigateToLogger
     )
 }
 
+sealed class ExpenseUiItem {
+    data class Header(val monthTitle: String) : ExpenseUiItem()
+    data class Expense(val expense: ExpenseEntity) : ExpenseUiItem()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyExpensesManagerContent(
     totalMonthAmount: Double,
+    currentMonthName: String,
     expenses: List<ExpenseEntity>,
     onNavigateBack: () -> Unit,
     onNavigateToLogger: () -> Unit
 ) {
     var activeFilter by remember { mutableStateOf("All") }
     val itemDateFormat = remember { SimpleDateFormat("MMM dd", Locale.getDefault()) }
+    val monthFormat = remember { SimpleDateFormat("MMMM", Locale.getDefault()) }
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
             maximumFractionDigits = 0
@@ -68,7 +76,7 @@ fun DailyExpensesManagerContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Add Committed Expense",
+                        text = "Daily Expenses Manager",
                         color = Color.White,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
@@ -123,7 +131,7 @@ fun DailyExpensesManagerContent(
                         .padding(20.dp)
                 ) {
                     Text(
-                        text = "Daily Expenses (October)",
+                        text = "Daily Expenses ($currentMonthName)",
                         color = Color(0xFFAAAAAA),
                         fontSize = 13.sp
                     )
@@ -182,92 +190,129 @@ fun DailyExpensesManagerContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Filtered Transactions List
+            // Filtered and Month-Grouped Transactions List
             val filteredList = if (activeFilter == "All") {
                 expenses
             } else {
                 expenses.filter { it.category.contains(activeFilter, ignoreCase = true) }
+            }.sortedByDescending { it.date }
+
+            val uiItems: List<ExpenseUiItem> = remember(filteredList, monthFormat) {
+                val result = mutableListOf<ExpenseUiItem>()
+                var lastMonth: String? = null
+                for (item in filteredList) {
+                    val monthName = monthFormat.format(Date(item.date))
+                    if (monthName != lastMonth) {
+                        result.add(ExpenseUiItem.Header(monthName))
+                        lastMonth = monthName
+                    }
+                    result.add(ExpenseUiItem.Expense(item))
+                }
+                result
             }
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(filteredList) { item ->
-                    Card(
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = DarkCardBg),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                width = 1.dp,
-                                color = CanaryYellow.copy(alpha = 0.45f),
-                                shape = RoundedCornerShape(14.dp)
-                            )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                // Category Icon Badge with matching softened border
-                                Box(
+                items(
+                    items = uiItems,
+                    key = { uiItem ->
+                        when (uiItem) {
+                            is ExpenseUiItem.Header -> "header_${uiItem.monthTitle}"
+                            is ExpenseUiItem.Expense -> "expense_${uiItem.expense.expenseId}"
+                        }
+                    },
+                    itemContent = { uiItem ->
+                        when (uiItem) {
+                            is ExpenseUiItem.Header -> {
+                                Text(
+                                    text = uiItem.monthTitle,
+                                    color = Color(0xFFAAAAAA),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
+                                )
+                            }
+                            is ExpenseUiItem.Expense -> {
+                                val item = uiItem.expense
+                                Card(
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = CardDefaults.cardColors(containerColor = DarkCardBg),
                                     modifier = Modifier
-                                        .size(36.dp)
-                                        .background(Color(0xFF222222), CircleShape)
-                                        .border(1.dp, CanaryYellow.copy(alpha = 0.45f), CircleShape),
-                                    contentAlignment = Alignment.Center
+                                        .fillMaxWidth()
+                                        .border(
+                                            width = 1.dp,
+                                            color = CanaryYellow.copy(alpha = 0.45f),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
                                 ) {
-                                    val catLower = item.category.lowercase(Locale.ROOT)
-                                    val icon = when {
-                                        catLower.contains("pickme") || catLower.contains("ride") || catLower.contains("car") || catLower.contains("transport") -> Icons.Default.DirectionsCar
-                                        catLower.contains("uber") || catLower.contains("food") || catLower.contains("dining") || catLower.contains("eat") -> Icons.Default.Fastfood
-                                        catLower.contains("coffee") || catLower.contains("cafe") || catLower.contains("tea") -> Icons.Default.LocalCafe
-                                        catLower.contains("fuel") || catLower.contains("gas") || catLower.contains("petrol") -> Icons.Default.LocalGasStation
-                                        catLower.contains("medical") || catLower.contains("doctor") || catLower.contains("hospital") || catLower.contains("health") || catLower.contains("pharmacy") -> Icons.Default.LocalHospital
-                                        else -> Icons.Default.ShoppingCart
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            // Category Icon Badge with matching softened border
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(Color(0xFF222222), CircleShape)
+                                                    .border(1.dp, CanaryYellow.copy(alpha = 0.45f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                val catLower = item.category.lowercase(Locale.ROOT)
+                                                val icon = when {
+                                                    catLower.contains("pickme") || catLower.contains("ride") || catLower.contains("car") || catLower.contains("transport") -> Icons.Default.DirectionsCar
+                                                    catLower.contains("uber") || catLower.contains("food") || catLower.contains("dining") || catLower.contains("eat") -> Icons.Default.Fastfood
+                                                    catLower.contains("coffee") || catLower.contains("cafe") || catLower.contains("tea") -> Icons.Default.LocalCafe
+                                                    catLower.contains("fuel") || catLower.contains("gas") || catLower.contains("petrol") -> Icons.Default.LocalGasStation
+                                                    catLower.contains("medical") || catLower.contains("doctor") || catLower.contains("hospital") || catLower.contains("health") || catLower.contains("pharmacy") -> Icons.Default.LocalHospital
+                                                    else -> Icons.Default.ShoppingCart
+                                                }
+                                                Icon(
+                                                    imageVector = icon,
+                                                    contentDescription = null,
+                                                    tint = CanaryYellow,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.width(12.dp))
+
+                                            Column {
+                                                Text(
+                                                    text = item.category,
+                                                    color = Color.White,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = "${itemDateFormat.format(Date(item.date))} | ${item.paymentMethod}",
+                                                    color = Color(0xFFAAAAAA),
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                        }
+
+                                        Text(
+                                            text = "LKR ${currencyFormatter.format(item.amount)}",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
                                     }
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = null,
-                                        tint = CanaryYellow,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column {
-                                    Text(
-                                        text = item.category,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "${itemDateFormat.format(Date(item.date))} | ${item.paymentMethod}",
-                                        color = Color(0xFFAAAAAA),
-                                        fontSize = 11.sp
-                                    )
                                 }
                             }
-
-                            Text(
-                                text = "LKR ${currencyFormatter.format(item.amount)}",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
                         }
                     }
-                }
+                )
             }
         }
     }
@@ -305,6 +350,7 @@ fun DailyExpensesManagerScreenPreview() {
 
     DailyExpensesManagerContent(
         totalMonthAmount = 3400.0,
+        currentMonthName = "November",
         expenses = sampleExpenses,
         onNavigateBack = {},
         onNavigateToLogger = {}

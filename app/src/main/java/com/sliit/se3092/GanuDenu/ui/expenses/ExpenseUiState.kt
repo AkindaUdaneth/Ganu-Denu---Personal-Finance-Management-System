@@ -9,6 +9,7 @@ data class ExpenseUiState(
     val totalDailyToday: Double = 0.0,
     val totalDailyMonth: Double = 0.0,
     val committedOverheadMonthly: Double = 0.0,
+    val currentMonthName: String = "",
     val selectedFilter: String = "All",
     val isLoading: Boolean = false,
     val errorMessage: String? = null
