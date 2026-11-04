@@ -43,23 +43,42 @@ class FirebaseAuthRepository @Inject constructor(
         ) else null
     }
 
-    override suspend fun createProfile(name: String, phone: String): UserProfile {
-        val identity = requireNotNull(currentIdentity) { "Please sign in again." }
-        val reference = firestore.collection("users").document(identity.uid)
+    override suspend fun createProfile(
+        name: String,
+        phone: String
+    ): UserProfile {
 
-        // Removed the fragile runTransaction and replaced with a robust direct set
+        val identity = requireNotNull(currentIdentity) {
+            "Please sign in again."
+        }
+
+        val reference = firestore
+            .collection("users")
+            .document(identity.uid)
+
+        val snapshot = reference.get(Source.SERVER).await()
+
+        val profileData = mutableMapOf<String, Any>(
+            "name" to name.trim(),
+            "phone" to phone.trim(),
+            "email" to identity.email,
+            "preferredCurrency" to "LKR",
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+
+        if (!snapshot.exists()) {
+            profileData["createdAt"] =
+                FieldValue.serverTimestamp()
+        }
+
         reference.set(
-            mapOf(
-                "name" to name,
-                "phone" to phone,
-                "email" to identity.email,
-                "preferredCurrency" to "LKR",
-                "updatedAt" to FieldValue.serverTimestamp()
-            ),
+            profileData,
             SetOptions.merge()
         ).await()
 
-        return requireNotNull(loadProfile()) { "Profile was not saved. Please retry." }
+        return requireNotNull(loadProfile()) {
+            "Profile was not saved. Please retry."
+        }
     }
 
     override suspend fun sendPasswordReset(email: String) {
