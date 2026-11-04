@@ -2,7 +2,6 @@ package com.sliit.se3092.GanuDenu.ui.income
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -40,16 +38,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sliit.se3092.GanuDenu.data.income.*
 import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
-import com.sliit.se3092.ganudenu.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.sliit.se3092.GanuDenu.ui.theme.CanaryAccent
 
 private val InputGray = Color(0xFF1D1D1D)
 private val CardGray = Color(0xFF292929)
-private val MutedGold = Color(0xFFBBB89C)
+private val MutedText = Color.LightGray
 
 @Composable
 fun AddIncomeScreen(viewModel: IncomeViewModel, onBack: () -> Unit, onSaved: () -> Unit) {
@@ -75,24 +73,23 @@ fun AddIncomeScreen(viewModel: IncomeViewModel, onBack: () -> Unit, onSaved: () 
 internal fun AddIncomeContent(
     state: IncomeUiState, draft: IncomeDraft, onBack: () -> Unit,
     selectSource: (IncomeSource) -> Unit, edit: ((IncomeDraft) -> IncomeDraft) -> Unit, onSave: () -> Unit
-) {
+) = CanaryAccent {
     var datePickerOpen by remember { mutableStateOf(false) }
     var frequencyOpen by remember { mutableStateOf(false) }
     val focus = LocalFocusManager.current
-    Column(Modifier.fillMaxSize().background(Color.Black)) {
+    Column(Modifier.fillMaxSize().background(Color.Black).imePadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, enabled = !state.saving) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back to income overview", tint = Color.White)
             }
-            Text("Add Income", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-            Image(painterResource(R.drawable.ganu_denu_logo), "Ganu Denu", modifier = Modifier.size(32.dp))
+            Text("Add Income", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("INCOME BY SOURCE", color = Color(0xFFE0E0E0), fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
-                Text("4 Channels Monitored", color = MutedGold, fontSize = 9.sp)
+                Text("4 Channels Monitored", color = MutedText, fontSize = 9.sp)
             }
             Spacer(Modifier.height(16.dp))
             state.cards.chunked(2).forEach { cards ->
@@ -138,7 +135,7 @@ internal fun AddIncomeContent(
                             shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, CardGray),
                             contentPadding = PaddingValues(horizontal = 10.dp), modifier = Modifier.fillMaxWidth().height(54.dp).testTag("income-frequency")) {
                             Text(draft.frequency.title, color = Color.White, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                            Icon(Icons.Outlined.KeyboardArrowDown, null, tint = MutedGold, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Outlined.KeyboardArrowDown, null, tint = MutedText, modifier = Modifier.size(18.dp))
                         }
                         DropdownMenu(expanded = frequencyOpen, onDismissRequest = { frequencyOpen = false }) {
                             IncomeFrequency.entries.forEach { frequency -> DropdownMenuItem(text = { Text(frequency.title) },
@@ -155,8 +152,8 @@ internal fun AddIncomeContent(
                     listOf(IncomeStatus.CONFIRMED to "Confirmed", IncomeStatus.ESTIMATED to "Estimated").forEach { (status, title) ->
                         TextButton(onClick = { edit { it.copy(status = status) } }, enabled = !state.saving,
                             shape = RoundedCornerShape(6.dp), modifier = Modifier.weight(1f).semantics { selected = draft.status == status; role = Role.RadioButton },
-                            colors = ButtonDefaults.textButtonColors(containerColor = if (draft.status == status) Color(0xFFD8CE61) else Color.Transparent)) {
-                            Text(title, color = if (draft.status == status) Color.Black else MutedGold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            colors = ButtonDefaults.textButtonColors(containerColor = if (draft.status == status) IncomeYellow else Color.Transparent)) {
+                            Text(title, color = if (draft.status == status) Color.Black else MutedText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -164,7 +161,7 @@ internal fun AddIncomeContent(
             Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.VerifiedUser, null, tint = IncomeYellow, modifier = Modifier.size(13.dp))
                 Text(if (draft.status == IncomeStatus.CONFIRMED) " Money has actually been credited to your account."
-                    else " Expected income — not yet received.", color = MutedGold, fontSize = 11.sp)
+                    else " Expected income — not yet received.", color = MutedText, fontSize = 11.sp)
             }
             state.formError?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.padding(top = 12.dp)) }
             Button(onClick = { focus.clearFocus(); onSave() }, enabled = !state.saving,
@@ -181,9 +178,20 @@ internal fun AddIncomeContent(
             confirmButton = { TextButton(onClick = {
                 picker.selectedDateMillis?.let { millis -> edit { it.copy(date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()) } }
                 datePickerOpen = false
-            }, enabled = picker.selectedDateMillis != null) { Text("Select") } },
-            dismissButton = { TextButton(onClick = { datePickerOpen = false }) { Text("Cancel") } }) {
-            DatePicker(state = picker)
+            }, enabled = picker.selectedDateMillis != null) { Text("Select", color = IncomeYellow) } },
+            dismissButton = { TextButton(onClick = { datePickerOpen = false }) { Text("Cancel", color = IncomeYellow) } }) {
+            DatePicker(
+                state = picker,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = IncomeYellow,
+                    selectedDayContentColor = Color.Black,
+                    todayDateBorderColor = IncomeYellow,
+                    todayContentColor = IncomeYellow,
+                    selectedYearContainerColor = IncomeYellow,
+                    selectedYearContentColor = Color.Black,
+                    currentYearContentColor = IncomeYellow
+                )
+            )
         }
     }
 }
@@ -197,17 +205,17 @@ private fun SourceSelector(card: IncomeCardUi, isSelected: Boolean, enabled: Boo
         IncomeSource.CRYPTO -> Icons.Outlined.CurrencyBitcoin
     }
     Surface(onClick = onClick, enabled = enabled, color = CardGray, shape = RoundedCornerShape(8.dp),
-        border = if (isSelected) BorderStroke(1.dp, IncomeYellow) else null,
+        border = if (isSelected) BorderStroke(2.dp, IncomeYellow) else BorderStroke(1.dp, Color.DarkGray),
         modifier = modifier.heightIn(min = 108.dp).testTag("income-source-${card.source.key}").semantics { selected = isSelected; role = Role.RadioButton }) {
         Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, null, tint = IncomeYellow, modifier = Modifier.size(15.dp))
-                Text(card.badge, color = MutedGold, fontSize = 7.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                Text(card.badge, color = MutedText, fontSize = 7.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
             }
             Text(card.source.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("LKR ${formatIncomeMoney(card.amountMinor)}", color = if (isSelected) IncomeYellow else Color.White,
                 fontSize = 12.sp, modifier = Modifier.padding(top = 3.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(card.highlight ?: card.detail, color = MutedGold, fontSize = 9.sp,
+            Text(card.highlight ?: card.detail, color = MutedText, fontSize = 9.sp,
                 modifier = Modifier.padding(top = 4.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -217,7 +225,7 @@ private fun SourceSelector(card: IncomeCardUi, isSelected: Boolean, enabled: Boo
 private fun FieldLabel(text: String) { Text(text, color = Color(0xFFDEDEDE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 7.dp)) }
 
 @Composable
-private fun Helper(text: String) { Text(text, color = MutedGold, fontSize = 10.sp, modifier = Modifier.padding(top = 6.dp)) }
+private fun Helper(text: String) { Text(text, color = MutedText, fontSize = 10.sp, modifier = Modifier.padding(top = 6.dp)) }
 
 @Preview(widthDp = 390, heightDp = 800)
 @Composable

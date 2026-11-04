@@ -15,17 +15,15 @@ import org.junit.Test
 class AuthViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private lateinit var repository: FakeAuthRepository
-    private lateinit var preferences: FakeBiometricPreferences
 
     @Before fun setup() {
         Dispatchers.setMain(dispatcher)
         repository = FakeAuthRepository()
-        preferences = FakeBiometricPreferences()
     }
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test fun invalidFormDoesNotCallFirebase() = runTest(dispatcher) {
-        val vm = AuthViewModel(repository, preferences)
+        val vm = AuthViewModel(repository)
         runCurrent()
         vm.switchMode(true)
         vm.submit()
@@ -59,39 +57,23 @@ class AuthViewModelTest {
         assertEquals(AuthSession.SIGNED_IN, vm.uiState.value.session)
     }
 
-    @Test fun restoredSessionRequiresBiometricAndSignOutClearsUserState() = runTest(dispatcher) {
+    @Test fun restoredSessionSignsInAndSignOutClearsUserState() = runTest(dispatcher) {
         repository.signIn("person@example.com", "password")
         repository.createProfile("Kasun", "+94711234567")
-        preferences.setEnabled("uid-1", true)
-        val vm = AuthViewModel(repository, preferences)
+        val vm = AuthViewModel(repository)
         runCurrent()
-        assertEquals(AuthSession.LOCKED, vm.uiState.value.session)
-        vm.biometricSucceeded()
         assertEquals(AuthSession.SIGNED_IN, vm.uiState.value.session)
-        vm.lockIfEnabled()
-        assertEquals(AuthSession.LOCKED, vm.uiState.value.session)
         vm.signOut()
         runCurrent()
         assertEquals(AuthSession.SIGNED_OUT, vm.uiState.value.session)
         assertNull(vm.uiState.value.profile)
     }
 
-    @Test fun biometricOptInIsSavedOnlyAfterSuccessfulPrompt() = runTest(dispatcher) {
-        val vm = registrationForm()
-        vm.updateBiometric(true)
-        vm.submit()
-        runCurrent()
-        assertEquals(AuthSession.LOCKED, vm.uiState.value.session)
-        assertFalse(preferences.isEnabled("uid-1"))
-        vm.biometricSucceeded()
-        assertTrue(preferences.isEnabled("uid-1"))
-    }
-
     @Test fun restoreNetworkFailureOffersRetryInsteadOfDashboard() = runTest(dispatcher) {
         repository.signIn("person@example.com", "password")
         repository.createProfile("Kasun", "+94711234567")
         repository.failProfileRead = true
-        val vm = AuthViewModel(repository, preferences)
+        val vm = AuthViewModel(repository)
         runCurrent()
         assertEquals(AuthSession.ERROR, vm.uiState.value.session)
         repository.failProfileRead = false
@@ -101,7 +83,7 @@ class AuthViewModelTest {
     }
 
     @Test fun passwordResetValidatesThenSendsAndShowsGenericMessage() = runTest(dispatcher) {
-        val vm = AuthViewModel(repository, preferences)
+        val vm = AuthViewModel(repository)
         runCurrent()
         vm.showResetDialog()
         vm.resetPassword()
@@ -115,7 +97,7 @@ class AuthViewModelTest {
     }
 
     private suspend fun TestScope.registrationForm(): AuthViewModel {
-        val vm = AuthViewModel(repository, preferences)
+        val vm = AuthViewModel(repository)
         runCurrent()
         vm.switchMode(true)
         vm.updateName(" Kasun Perera ")
@@ -147,12 +129,4 @@ private class FakeAuthRepository : AuthRepository {
     }
     override suspend fun sendPasswordReset(email: String) { resetRecipient = email }
     override fun signOut() { identities.value = null }
-}
-
-private class FakeBiometricPreferences : BiometricPreferences {
-    private val enabled = mutableSetOf<String>()
-    override fun isEnabled(uid: String) = uid in enabled
-    override fun setEnabled(uid: String, enabled: Boolean) {
-        if (enabled) this.enabled.add(uid) else this.enabled.remove(uid)
-    }
 }

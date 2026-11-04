@@ -1,7 +1,9 @@
 package com.sliit.se3092.ganudenu
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.activity.compose.setContent
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.sliit.se3092.GanuDenu.MainActivity
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,7 +21,7 @@ import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
 
 class IncomeNavigationTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val repository = NavigationIncomeRepository()
 
     @Before fun installFakeRepository() {
@@ -33,10 +35,12 @@ class IncomeNavigationTest {
     }
 
     @Test fun logIncomeOpensSeparateRouteAndSaveReturnsToOverview() {
-        compose.setContent {
-            GanuDenuTheme {
-                val navigation = rememberNavController()
-                AppNavHost(navigation)
+        compose.activityRule.scenario.onActivity { activity ->
+            activity.setContent {
+                GanuDenuTheme {
+                    val navigation = rememberNavController()
+                    AppNavHost(navigation)
+                }
             }
         }
         compose.onNodeWithText("Income").performClick()
@@ -44,7 +48,7 @@ class IncomeNavigationTest {
         compose.onNodeWithText(" Log Income").performClick()
         compose.onNodeWithText("Add Income").assertIsDisplayed()
         compose.onNodeWithText("Income Dashboard").assertDoesNotExist()
-        compose.onNodeWithText("Income").assertDoesNotExist()
+        compose.onNodeWithText("Income").assertIsDisplayed().assertIsSelected()
         compose.onNodeWithTag("income-source-freelance").performClick().assertIsSelected()
         compose.onNodeWithTag("income-amount").performTextInput("2,500.00")
         compose.onNodeWithTag("income-frequency").performScrollTo().performClick()

@@ -1,7 +1,6 @@
 package com.sliit.se3092.GanuDenu.ui.income
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,13 +30,24 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sliit.se3092.ganudenu.R
 import com.sliit.se3092.GanuDenu.data.income.*
 import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import com.sliit.se3092.GanuDenu.ui.theme.CanaryYellow
 import java.time.LocalDate
+import java.time.Month
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.Locale
 import java.time.format.DateTimeFormatter
+import com.sliit.se3092.GanuDenu.ui.theme.CanaryAccent
 
-internal val IncomeYellow = Color(0xFFFFEF46)
+internal val IncomeYellow = CanaryYellow
 private val IncomeGray = Color(0xFF292929)
 
 @Composable
@@ -50,29 +59,39 @@ fun IncomeDashboardScreen(viewModel: IncomeViewModel, onBack: () -> Unit, onLogI
         owner.lifecycle.addObserver(observer)
         onDispose { owner.lifecycle.removeObserver(observer) }
     }
-    IncomeDashboardContent(state, onBack, onLogIncome, viewModel::retry, viewModel::dismissMessage)
+    IncomeDashboardContent(state, onBack, onLogIncome, viewModel::retry, viewModel::dismissMessage, viewModel::selectMonth)
 }
 
 @Composable
 internal fun IncomeDashboardContent(
     state: IncomeUiState, onBack: () -> Unit, onLog: () -> Unit,
-    onRetry: () -> Unit, onDismissMessage: () -> Unit
-) {
+    onRetry: () -> Unit, onDismissMessage: () -> Unit,
+    onSelectMonth: (YearMonth) -> Unit = {}
+) = CanaryAccent {
+    var showMonthPicker by rememberSaveable { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().background(Color.Black)) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back to dashboard", tint = Color.White)
             }
-            Text("Income Dashboard", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium,
+            Text("Income Dashboard", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f))
-            Image(painterResource(R.drawable.ganu_denu_logo), "Ganu Denu", modifier = Modifier.size(32.dp))
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
-            Spacer(Modifier.height(30.dp))
-            Text("INCOME STATUS", color = Color(0xFFE0E0E0), fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            Text(state.month.format(DateTimeFormatter.ofPattern("MMMM yyyy")), color = Color(0xFFAAA68C),
-                fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+            OutlinedButton(
+                onClick = { showMonthPicker = true },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                border = BorderStroke(1.dp, IncomeYellow),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = IncomeYellow)
+            ) {
+                Icon(Icons.Outlined.CalendarMonth, contentDescription = "Choose income month")
+                Spacer(Modifier.width(10.dp))
+                Text(state.month.format(DateTimeFormatter.ofPattern("MMMM yyyy")))
+            }
+            Text("INCOME STATUS", color = Color(0xFFE0E0E0), fontWeight = FontWeight.Bold,
+                fontSize = 17.sp, modifier = Modifier.padding(bottom = 12.dp))
             IncomeStatusCard("CONFIRMED INCOME", state.summary.confirmedMinor)
             Spacer(Modifier.height(14.dp))
             IncomeStatusCard("ESTIMATED INCOME", state.summary.estimatedMinor)
@@ -80,11 +99,11 @@ internal fun IncomeDashboardContent(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("INCOME BY SOURCE", color = Color(0xFFE0E0E0), fontSize = 17.sp,
                     fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("4 Channels Monitored", color = Color(0xFFAAA68C), fontSize = 9.sp)
+                Text("4 Channels Monitored", color = Color.LightGray, fontSize = 9.sp)
             }
             Spacer(Modifier.height(18.dp))
             state.cards.chunked(2).forEach { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { card -> IncomeSourceCard(card, Modifier.weight(1f)) }
                 }
                 Spacer(Modifier.height(14.dp))
@@ -118,6 +137,64 @@ internal fun IncomeDashboardContent(
             Text(" Log Income", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
+    if (showMonthPicker) {
+        IncomeMonthPicker(
+            selectedMonth = state.month,
+            onDismiss = { showMonthPicker = false },
+            onSelect = { month ->
+                onSelectMonth(month)
+                showMonthPicker = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun IncomeMonthPicker(selectedMonth: YearMonth, onDismiss: () -> Unit, onSelect: (YearMonth) -> Unit) {
+    var year by rememberSaveable { mutableIntStateOf(selectedMonth.year) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = IncomeGray,
+        title = { Text("Choose income month", color = Color.White) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    IconButton(onClick = { year-- }, enabled = year > 2000) {
+                        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous year", tint = IncomeYellow)
+                    }
+                    Text(year.toString(), color = Color.White, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = { year++ }, enabled = year < 2100) {
+                        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, "Next year", tint = IncomeYellow)
+                    }
+                }
+                Month.entries.chunked(3).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        row.forEach { month ->
+                            val candidate = YearMonth.of(year, month)
+                            val isSelected = candidate == selectedMonth
+                            TextButton(
+                                onClick = { onSelect(candidate) },
+                                modifier = Modifier.weight(1f).semantics { selected = isSelected },
+                                contentPadding = PaddingValues(horizontal = 4.dp),
+                                colors = ButtonDefaults.textButtonColors(
+                                    containerColor = if (isSelected) IncomeYellow else Color.Transparent,
+                                    contentColor = if (isSelected) Color.Black else Color.White
+                                )
+                            ) {
+                                Text(month.getDisplayName(TextStyle.SHORT, Locale.getDefault()))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSelect(YearMonth.now()) }) { Text("This month", color = IncomeYellow) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = IncomeYellow) } }
+    )
+
 }
 
 @Composable
@@ -131,7 +208,7 @@ private fun IncomeStatusCard(title: String, amount: Long) {
                 Icon(Icons.Outlined.Paid, null, tint = IncomeYellow, modifier = Modifier.size(13.dp))
             }
             Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.Bottom) {
-                Text("LKR", color = Color(0xFFBDB99C), fontSize = 12.sp, modifier = Modifier.padding(end = 9.dp, bottom = 5.dp))
+                Text("LKR", color = Color.LightGray, fontSize = 12.sp, modifier = Modifier.padding(end = 9.dp, bottom = 5.dp))
                 Text(formatIncomeMoney(amount), color = IncomeYellow, fontSize = 30.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
@@ -147,12 +224,12 @@ private fun IncomeSourceCard(card: IncomeCardUi, modifier: Modifier) {
         IncomeSource.ADSENSE -> Icons.Outlined.AttachMoney
         IncomeSource.CRYPTO -> Icons.Outlined.CurrencyBitcoin
     }
-    Surface(color = Color.Black, shape = RoundedCornerShape(9.dp),
-        border = BorderStroke(0.75.dp, IncomeYellow), modifier = modifier.heightIn(min = 152.dp)) {
-        Column(Modifier.padding(10.dp)) {
+    Surface(color = Color(0xFF141414), shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color.White), modifier = modifier.heightIn(min = 144.dp)) {
+        Column(Modifier.padding(14.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = null, tint = IncomeYellow, modifier = Modifier.size(18.dp))
-                Text(card.badge, color = Color(0xFFAAA68C), fontSize = 8.sp, modifier = Modifier.weight(1f),
+                Text(card.badge, color = Color.LightGray, fontSize = 8.sp, modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.End)
             }
             Text(card.source.title, color = Color(0xFFE5E5E5), fontWeight = FontWeight.Bold, fontSize = 14.sp,
@@ -162,7 +239,7 @@ private fun IncomeSourceCard(card: IncomeCardUi, modifier: Modifier) {
                 color = if (card.source == IncomeSource.SALARY || card.source == IncomeSource.CRYPTO) IncomeYellow else Color(0xFFE5E5E5),
                 fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             card.highlight?.let { Text(it, color = IncomeYellow, fontSize = 10.sp, modifier = Modifier.padding(top = 8.dp), maxLines = 2) }
-            Text(card.detail, color = Color(0xFFBDB99C), fontSize = 10.sp,
+            Text(card.detail, color = Color.LightGray, fontSize = 10.sp,
                 modifier = Modifier.padding(top = 8.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }

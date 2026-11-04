@@ -7,6 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -53,6 +54,23 @@ fun GanuDenuTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        content = content
+    )
+}
+@Composable
+internal fun CanaryAccent(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = CanaryYellow,
+            onPrimary = Color.Black,
+            primaryContainer = CanaryYellow,
+            onPrimaryContainer = Color.Black,
+            secondary = CanaryYellow,
+            onSecondary = Color.Black,
+            secondaryContainer = CanaryYellow,
+            onSecondaryContainer = Color.Black,
+            surfaceTint = CanaryYellow
+        ),
         content = content
     )
 }

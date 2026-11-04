@@ -31,13 +31,6 @@ class MainActivity : FragmentActivity() {
             }
         }
     }
-
-    override fun onStop() {
-        super.onStop()
-        if (!isChangingConfigurations) {
-            authViewModel.lockIfEnabled()
-        }
-    }
 }
 
 @Composable

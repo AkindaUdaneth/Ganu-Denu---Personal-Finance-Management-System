@@ -9,6 +9,8 @@ val DarkSurface1 = Color(0xFF121212)
 val DarkSurface2 = Color(0xFF1E1E1E)
 val DarkSurface3 = Color(0xFF282828)
 
+val CanaryYellow = Color(0xFFFFEF00)
+
 // Corn Yellow Accent Palette
 val CornYellowPrimary = Color(0xFFF5D033) // Corn Yellow
 val CornYellowOnPrimary = Color(0xFF1C1900)

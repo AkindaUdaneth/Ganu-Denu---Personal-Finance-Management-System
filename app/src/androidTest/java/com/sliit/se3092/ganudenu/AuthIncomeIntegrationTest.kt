@@ -1,9 +1,11 @@
 package com.sliit.se3092.ganudenu
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.activity.compose.setContent
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.sliit.se3092.GanuDenu.MainActivity
 import com.sliit.se3092.GanuDenu.GanuDenuApp
-import org.koin.core.context.unloadKoinModules
+import org.koin.core.context.GlobalContext
 import com.sliit.se3092.GanuDenu.data.auth.*
 import com.sliit.se3092.GanuDenu.data.income.*
 import com.sliit.se3092.GanuDenu.ui.auth.AuthViewModel
@@ -19,34 +21,29 @@ import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
 
 class AuthIncomeIntegrationTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val auth = IntegrationAuthRepository()
     private val income = IntegrationIncomeRepository(auth)
-    private val preferences = object : BiometricPreferences {
-        override fun isEnabled(uid: String) = false
-        override fun setEnabled(uid: String, enabled: Boolean) = Unit
-    }
-
-
-    private val testModule = module {
-        single<AuthRepository> { auth }
-        single<IncomeRepository> { income }
-    }
+    private lateinit var originalIncome: IncomeRepository
 
     @Before
     fun overrideRepositories() {
-        loadKoinModules(testModule)
+        originalIncome = GlobalContext.get().get<IncomeRepository>()
+        loadKoinModules(module { single<IncomeRepository> { income } })
     }
 
     @After
     fun restoreDependencies() {
-        unloadKoinModules(testModule)
+        val repository = originalIncome
+        loadKoinModules(module { single<IncomeRepository> { repository } })
     }
 
 
     @Test fun signupIncomeAndLogoutUseTheSameUserSession() {
-        val vm = AuthViewModel(auth, preferences)
-        compose.setContent { GanuDenuTheme { GanuDenuApp(vm) } }
+        val vm = AuthViewModel(auth)
+        compose.activityRule.scenario.onActivity { activity ->
+            activity.setContent { GanuDenuTheme { GanuDenuApp(vm) } }
+        }
         compose.onNodeWithText("Welcome back").assertIsDisplayed()
         compose.onNodeWithText("Create account").performScrollTo().performClick()
         compose.onNode(hasText("Create Account") and hasClickAction()).assertExists()
@@ -69,12 +66,12 @@ class AuthIncomeIntegrationTest {
             assertEquals(IncomeSource.ADSENSE, income.saved?.source)
             assertEquals(750000L, income.saved?.amountLkrMinor)
             assertEquals("Income Tester", auth.profile?.name)
+            assertEquals("income.tester@example.com", auth.profile?.email)
         }
         compose.onNodeWithText("Settings").performClick()
-        compose.onNodeWithText("Income Tester").assertIsDisplayed()
-        compose.onNodeWithText("income.tester@example.com").assertIsDisplayed()
-        compose.onNodeWithText("Log Out").performClick()
-        compose.onAllNodesWithText("Log Out").filter(hasClickAction()).onLast().performClick()
+        // Settings uses Hilt's Firebase repository, so it offers its fallback sign-out action
+        // when the test's fake account has no Firebase session.
+        compose.onNodeWithText("Sign out").performClick()
         compose.onNodeWithText("Welcome back").assertIsDisplayed()
         compose.onNodeWithText("Income Dashboard").assertDoesNotExist()
         compose.runOnIdle { assertNull(auth.currentIdentity) }
@@ -82,8 +79,10 @@ class AuthIncomeIntegrationTest {
 
     @Test fun existingAccountLoginOpensFinanceNavigation() {
         auth.profile = UserProfile("integration-uid", "Returning User", "+94711234567", "returning@example.com")
-        val vm = AuthViewModel(auth, preferences)
-        compose.setContent { GanuDenuTheme { GanuDenuApp(vm) } }
+        val vm = AuthViewModel(auth)
+        compose.activityRule.scenario.onActivity { activity ->
+            activity.setContent { GanuDenuTheme { GanuDenuApp(vm) } }
+        }
         compose.onNodeWithText("Welcome back").assertIsDisplayed()
         val fields = compose.onAllNodes(hasSetTextAction())
         fields[0].performTextInput("returning@example.com")

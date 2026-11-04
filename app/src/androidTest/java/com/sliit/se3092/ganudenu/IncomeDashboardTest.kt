@@ -10,6 +10,9 @@ import com.sliit.se3092.GanuDenu.ui.income.*
 import com.sliit.se3092.GanuDenu.ui.theme.GanuDenuTheme
 import java.io.File
 import java.time.LocalDate
+import java.time.YearMonth
+import java.util.Locale
+import androidx.compose.runtime.mutableStateOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -52,6 +55,22 @@ class IncomeDashboardTest {
         compose.onAllNodes(hasSetTextAction()).assertCountEquals(0)
         compose.onNodeWithText(" Log Income").performClick()
         compose.runOnIdle { assertEquals(true, opened) }
+    }
+
+    @Test fun monthPickerShowsOctoberWhenSelected() {
+        val month = mutableStateOf(YearMonth.of(2026, 11))
+        compose.setContent {
+            GanuDenuTheme {
+                IncomeDashboardContent(
+                    IncomeUiState(month = month.value, loading = false),
+                    {}, {}, {}, {}, onSelectMonth = { month.value = it }
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("Choose income month").performClick()
+        val october = java.time.Month.OCTOBER.getDisplayName(java.time.format.TextStyle.SHORT, Locale.getDefault())
+        compose.onNodeWithText(october).performClick()
+        compose.onNodeWithText("October 2026").assertIsDisplayed()
     }
 
     @Test fun newAccountShowsZeroAndLogIncomeRemainsAvailable() {
