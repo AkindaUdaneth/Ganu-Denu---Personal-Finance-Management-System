@@ -43,6 +43,9 @@ fun RecurringExpenseScreen(
     RecurringExpenseContent(
         committedOverheadMonthly = state.committedOverheadMonthly,
         recurringItems = state.recurringItems,
+        currentMonthName = state.currentMonthName.ifBlank {
+            SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
+        },
         onNavigateBack = onNavigateBack,
         onNavigateToAddRecurring = onNavigateToAddRecurring,
         onToggleStatus = { item -> viewModel.toggleRecurringStatus(item) }
@@ -54,6 +57,7 @@ fun RecurringExpenseScreen(
 fun RecurringExpenseContent(
     committedOverheadMonthly: Double,
     recurringItems: List<RecurringItemEntity>,
+    currentMonthName: String,
     onNavigateBack: () -> Unit,
     onNavigateToAddRecurring: () -> Unit,
     onToggleStatus: (RecurringItemEntity) -> Unit
@@ -137,7 +141,7 @@ fun RecurringExpenseContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "October",
+                        text = currentMonthName,
                         color = Color(0xFFAAAAAA),
                         fontSize = 13.sp,
                         modifier = Modifier.align(Alignment.End)
@@ -338,6 +342,7 @@ fun RecurringExpenseScreenPreview() {
     RecurringExpenseContent(
         committedOverheadMonthly = 42000.0,
         recurringItems = sampleSubscriptions,
+        currentMonthName = "November",
         onNavigateBack = {},
         onNavigateToAddRecurring = {},
         onToggleStatus = {}
