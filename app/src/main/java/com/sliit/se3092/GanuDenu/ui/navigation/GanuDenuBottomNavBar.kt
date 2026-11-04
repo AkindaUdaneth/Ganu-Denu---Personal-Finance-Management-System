@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import com.sliit.se3092.GanuDenu.ui.theme.CanaryYellow
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
@@ -18,7 +19,6 @@ fun GanuDenuBottomNavBar(navController: NavController) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val ThemeBlack = Color(0xFF000000)
-    val ThemeYellow = Color(0xFFFFEF00)
 
     // Check if the current route belongs to the Expenses flow
     val isExpenseSelected = currentRoute in listOf(
@@ -55,7 +55,7 @@ fun GanuDenuBottomNavBar(navController: NavController) {
             selected = currentRoute == Screen.Dashboard.route,
             onClick = { navigateTo(Screen.Dashboard.route) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ThemeBlack, selectedTextColor = ThemeYellow, indicatorColor = ThemeYellow,
+                selectedIconColor = ThemeBlack, selectedTextColor = CanaryYellow, indicatorColor = CanaryYellow,
                 unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray
             )
         )
@@ -65,7 +65,7 @@ fun GanuDenuBottomNavBar(navController: NavController) {
             selected = currentRoute == Screen.IncomeHub.route || currentRoute == Screen.AddIncome.route,
             onClick = { navigateTo(Screen.IncomeHub.route) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ThemeBlack, selectedTextColor = ThemeYellow, indicatorColor = ThemeYellow,
+                selectedIconColor = ThemeBlack, selectedTextColor = CanaryYellow, indicatorColor = CanaryYellow,
                 unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray
             )
         )
@@ -75,7 +75,7 @@ fun GanuDenuBottomNavBar(navController: NavController) {
             selected = isExpenseSelected,
             onClick = { navigateTo(Screen.ExpenseHub.route) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ThemeBlack, selectedTextColor = ThemeYellow, indicatorColor = ThemeYellow,
+                selectedIconColor = ThemeBlack, selectedTextColor = CanaryYellow, indicatorColor = CanaryYellow,
                 unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray
             )
         )
@@ -85,7 +85,7 @@ fun GanuDenuBottomNavBar(navController: NavController) {
             selected = currentRoute == Screen.Settings.route,
             onClick = { navigateTo(Screen.Settings.route) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = ThemeBlack, selectedTextColor = ThemeYellow, indicatorColor = ThemeYellow,
+                selectedIconColor = ThemeBlack, selectedTextColor = CanaryYellow, indicatorColor = CanaryYellow,
                 unselectedIconColor = Color.Gray, unselectedTextColor = Color.Gray
             )
         )

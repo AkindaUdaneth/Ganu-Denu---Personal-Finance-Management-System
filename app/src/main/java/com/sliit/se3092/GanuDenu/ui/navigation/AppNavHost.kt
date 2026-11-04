@@ -55,6 +55,7 @@ fun AppNavHost(
         Screen.GoalEngine.route,
         Screen.Analytics.route,
         Screen.IncomeHub.route,
+        Screen.AddIncome.route,
         Screen.ExpenseHub.route,
         Screen.Settings.route
     )
