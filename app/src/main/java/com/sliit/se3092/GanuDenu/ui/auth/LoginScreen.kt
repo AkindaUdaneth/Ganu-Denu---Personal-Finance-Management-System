@@ -33,7 +33,7 @@ internal fun LoginScreen(state: AuthUiState, viewModel: AuthViewModel) {
         launchGoogleSignIn(
             context = context,
             scope = coroutineScope,
-            onSuccess = { idToken -> viewModel.signInWithGoogle(idToken) },
+            onSuccess = { idToken -> viewModel.signInWithGoogle(idToken, isSignUp = false) },
             onError = {}
         )
     }

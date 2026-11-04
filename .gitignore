@@ -22,6 +22,7 @@ local.properties
 
 # Firebase & Google Services (CRITICAL SECURITY)
 app/google-services.json
+app/src/main/res/values/strings.xml
 
 # Keystore files for app signing (SECURITY)
 *.jks

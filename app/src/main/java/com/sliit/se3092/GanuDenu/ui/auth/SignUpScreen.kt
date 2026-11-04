@@ -29,7 +29,7 @@ internal fun SignUpScreen(
         launchGoogleSignIn(
             context = context,
             scope = coroutineScope,
-            onSuccess = { idToken -> viewModel.signInWithGoogle(idToken) },
+            onSuccess = { idToken -> viewModel.signInWithGoogle(idToken, isSignUp = true) },
             onError = {}
         )
     }
