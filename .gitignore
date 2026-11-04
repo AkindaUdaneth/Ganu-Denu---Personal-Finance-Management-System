@@ -1,18 +1,36 @@
+# Android/Gradle Defaults
 *.iml
-.gradle
+.gradle/
 .kotlin/
+local.properties
 /local.properties
+.DS_Store
+/build/
+*/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# IntelliJ / Android Studio
+.idea/
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
 
-.idea/
+# Firebase & Google Services (CRITICAL SECURITY)
+app/google-services.json
+
+# Keystore files for app signing (SECURITY)
+*.jks
+*.keystore
+
+# JVM Crash Logs (Cleanup)
+hs_err_pid*.log
+replay_pid*.log
+
+# Custom Scripts outputs/logs
+scripts/*.log
+scripts/temp/
