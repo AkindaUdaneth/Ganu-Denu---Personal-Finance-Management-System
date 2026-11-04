@@ -80,7 +80,9 @@ fun DailyExpenseLoggerContent(
         selectedCalendar.get(Calendar.YEAR),
         selectedCalendar.get(Calendar.MONTH),
         selectedCalendar.get(Calendar.DAY_OF_MONTH)
-    )
+    ).apply {
+        datePicker.maxDate = System.currentTimeMillis()
+    }
 
     if (showAddCategorySheet) {
         AddCategoryBottomSheet(

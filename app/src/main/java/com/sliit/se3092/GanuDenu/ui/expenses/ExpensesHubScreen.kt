@@ -47,7 +47,6 @@ fun ExpensesHubScreen(
     ExpensesHubContent(
         totalDailyToday = state.totalDailyToday,
         totalDailyMonth = state.totalDailyMonth,
-        committedOverheadToday = 34000.0,
         committedOverheadMonthly = state.committedOverheadMonthly,
         monthName = monthName,
         onNavigateBack = onNavigateBack,
@@ -61,7 +60,6 @@ fun ExpensesHubScreen(
 fun ExpensesHubContent(
     totalDailyToday: Double,
     totalDailyMonth: Double,
-    committedOverheadToday: Double = 0.0,
     committedOverheadMonthly: Double,
     monthName: String,
     onNavigateBack: () -> Unit,
@@ -216,13 +214,6 @@ fun ExpensesHubContent(
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Today : LKR ${formatter.format(committedOverheadToday.toLong())}",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
                             text = "$monthName : LKR ${formatter.format(committedOverheadMonthly.toLong())}",
                             color = Color.White,
                             fontSize = 20.sp,
@@ -275,7 +266,6 @@ fun ExpensesHubScreenPreview() {
     ExpensesHubContent(
         totalDailyToday = 0.0,
         totalDailyMonth = 3400.0,
-        committedOverheadToday = 34000.0,
         committedOverheadMonthly = 42500.0,
         monthName = "Oct",
         onNavigateBack = {},
