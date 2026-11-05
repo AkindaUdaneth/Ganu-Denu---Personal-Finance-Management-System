@@ -1,6 +1,5 @@
 package com.sliit.se3092.GanuDenu.ui.settings
 
-import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -50,7 +49,6 @@ import com.sliit.se3092.GanuDenu.ui.theme.DangerRed
 import com.sliit.se3092.GanuDenu.ui.theme.SurfaceDark
 import com.sliit.se3092.GanuDenu.ui.theme.ThemeBlack
 import com.sliit.se3092.GanuDenu.ui.theme.ThemeYellow
-import com.sliit.se3092.GanuDenu.util.ImageUtils
 import java.io.File
 
 
@@ -63,6 +61,10 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
     val context = LocalContext.current
 
     var cameraUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProfileImage(context)
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { viewModel.updateProfileImageFromUri(context, it) }
@@ -146,7 +148,7 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
                             cameraLauncher.launch(uri)
                         },
                         onGalleryClick = { galleryLauncher.launch("image/*") },
-                        onRemoveClick = { viewModel.removeProfileImage() }
+                        onRemoveClick = { viewModel.removeProfileImage(context) }
                     )
                 }
             }
@@ -194,18 +196,13 @@ private fun ProfileFormContent(
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (state.profileImageBase64.isNotEmpty()) {
-                    val bitmap = ImageUtils.base64ToBitmap(state.profileImageBase64)
-                    if (bitmap != null) {
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
-                    }
+                if (state.profileImageBitmap != null) {
+                    Image(
+                        bitmap = state.profileImageBitmap.asImageBitmap(),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
                     Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
                 }

@@ -1,5 +1,7 @@
 package com.sliit.se3092.GanuDenu.ui.settings
 
+import android.graphics.Bitmap
+
 sealed interface SettingsUiState {
     data object Loading : SettingsUiState
 
@@ -9,7 +11,7 @@ sealed interface SettingsUiState {
         val notificationsEnabled: Boolean,
         val showLogoutDialog: Boolean,
         val showDeleteDialog: Boolean,
-        val profileImageBase64: String = ""
+        val profileImageBitmap: Bitmap? = null
     ) : SettingsUiState
 
     data class Error(val message: String) : SettingsUiState
