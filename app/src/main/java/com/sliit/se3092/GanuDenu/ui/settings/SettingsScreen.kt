@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)

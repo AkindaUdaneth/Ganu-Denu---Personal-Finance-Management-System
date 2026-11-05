@@ -25,7 +25,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +43,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sliit.se3092.GanuDenu.util.ImageUtils
+import java.io.File
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
@@ -57,12 +62,22 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
     val sheetState = rememberModalBottomSheetState()
     val context = LocalContext.current
 
+    var cameraUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { viewModel.updateProfileImageFromUri(context, it) }
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
-        bitmap?.let { viewModel.updateProfileImageFromBitmap(it) }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
+        if (success) {
+            cameraUri?.let { viewModel.updateProfileImageFromUri(context, it) }
+        }
+    }
+
+    fun createTempImageUri(): Uri {
+        val tempFile = File(context.cacheDir, "images").apply { mkdirs() }
+        val file = File(tempFile, "temp_profile.jpg")
+        return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
     LaunchedEffect(state.showSuccessSnackbar, state.errorMessage) {
@@ -125,7 +140,11 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
                     dragHandle = { BottomSheetDefaults.DragHandle(color = BorderGray) }
                 ) {
                     PhotoBottomSheetContent(
-                        onCameraClick = { cameraLauncher.launch(null) },
+                        onCameraClick = {
+                            val uri = createTempImageUri()
+                            cameraUri = uri
+                            cameraLauncher.launch(uri)
+                        },
                         onGalleryClick = { galleryLauncher.launch("image/*") },
                         onRemoveClick = { viewModel.removeProfileImage() }
                     )
