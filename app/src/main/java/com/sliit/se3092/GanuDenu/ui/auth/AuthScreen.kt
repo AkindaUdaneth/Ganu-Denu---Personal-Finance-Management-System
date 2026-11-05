@@ -1,6 +1,7 @@
 package com.sliit.se3092.GanuDenu.ui.auth
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,12 +12,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sliit.se3092.GanuDenu.ui.theme.CanaryAccent
+import com.sliit.se3092.ganudenu.R
 
 @Composable
 fun AuthScreen(viewModel: AuthViewModel) = CanaryAccent {
@@ -26,10 +31,23 @@ fun AuthScreen(viewModel: AuthViewModel) = CanaryAccent {
     }
     Surface(color = Color.Black, modifier = Modifier.fillMaxSize()) {
         when (state.session) {
-            AuthSession.CHECKING -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    CircularProgressIndicator(color = AuthYellow)
-                    Text("Opening your account…", color = Color.LightGray)
+            AuthSession.CHECKING -> Box(
+                Modifier.fillMaxSize().safeDrawingPadding(),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(148.dp).semantics {
+                            contentDescription = "Loading your account"
+                        },
+                        color = AuthYellow,
+                        strokeWidth = 3.dp
+                    )
+                    Image(
+                        painter = painterResource(R.drawable.ganu_denu_logo),
+                        contentDescription = "Ganu Denu logo",
+                        modifier = Modifier.size(112.dp)
+                    )
                 }
             }
             AuthSession.ERROR -> AuthStatusPanel(
