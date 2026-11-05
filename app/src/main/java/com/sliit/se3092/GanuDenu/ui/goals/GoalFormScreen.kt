@@ -23,11 +23,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-
-private val ThemeBlack = Color(0xFF000000)
-private val ThemeYellow = Color(0xFFFFEF00)
-private val SurfaceDark = Color(0xFF18181B)
-private val BorderGray = Color(0xFF3F3F46)
+import com.sliit.se3092.GanuDenu.ui.theme.BorderGray
+import com.sliit.se3092.GanuDenu.ui.theme.SurfaceDark
+import com.sliit.se3092.GanuDenu.ui.theme.ThemeBlack
+import com.sliit.se3092.GanuDenu.ui.theme.ThemeYellow
 
 @Composable
 fun GoalFormScreen(viewModel: GoalFormViewModel, onBackClick: () -> Unit = {}) {

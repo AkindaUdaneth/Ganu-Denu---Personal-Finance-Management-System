@@ -45,14 +45,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sliit.se3092.GanuDenu.ui.theme.BorderGray
+import com.sliit.se3092.GanuDenu.ui.theme.DangerRed
+import com.sliit.se3092.GanuDenu.ui.theme.SurfaceDark
+import com.sliit.se3092.GanuDenu.ui.theme.ThemeBlack
+import com.sliit.se3092.GanuDenu.ui.theme.ThemeYellow
 import com.sliit.se3092.GanuDenu.util.ImageUtils
 import java.io.File
 
-private val ThemeBlack = Color(0xFF000000)
-private val ThemeYellow = Color(0xFFFFEF00)
-private val SurfaceDark = Color(0xFF18181B)
-private val BorderGray = Color(0xFF3F3F46)
-private val DangerRed = Color(0xFFEF4444)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

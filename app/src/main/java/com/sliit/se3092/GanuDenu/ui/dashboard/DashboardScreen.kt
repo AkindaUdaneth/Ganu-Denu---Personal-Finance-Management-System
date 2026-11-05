@@ -30,12 +30,10 @@ import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
-
-// Theme Colors
-private val ThemeBlack = Color(0xFF000000)
-private val SurfaceDark = Color(0xFF18181B)
-private val ThemeYellow = Color(0xFFFFEF00)
-private val BorderGray = Color(0xFF3F3F46)
+import com.sliit.se3092.GanuDenu.ui.theme.BorderGray
+import com.sliit.se3092.GanuDenu.ui.theme.SurfaceDark
+import com.sliit.se3092.GanuDenu.ui.theme.ThemeBlack
+import com.sliit.se3092.GanuDenu.ui.theme.ThemeYellow
 
 @Composable
 fun DashboardScreen(
