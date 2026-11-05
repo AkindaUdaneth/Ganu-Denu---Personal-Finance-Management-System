@@ -35,3 +35,6 @@ replay_pid*.log
 # Custom Scripts outputs/logs
 scripts/*.log
 scripts/temp/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
