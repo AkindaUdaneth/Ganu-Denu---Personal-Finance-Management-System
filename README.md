@@ -90,7 +90,7 @@ See [Firebase setup guide](docs/FIREBASE_SETUP.md) for console steps, custom sec
 
 ## 7. Team Contributions
 
-- **K.H.G.A. Udaneth** (`IT23750210`) — App Branding & Splash Screen, Email/Password Authentication (Login & Account Registration screens), and Multi-Source Income Subsystem (Income Dashboard, Confirmed vs. Estimated Status, 4-Source Grid, and Add Income Flow).
+- **T.C. Dahanayaka** (`IT23746978`) — App Branding & Splash Screen, Email/Password Authentication (Login & Account Registration screens), and Multi-Source Income Subsystem (Income Dashboard, Confirmed vs. Estimated Status, 4-Source Grid, and Add Income Flow).
 - **M.M.H.M. Valantina** (`IT23749320`) — Complete Expense Management System (Expenses Hub, Committed/Recurring Subscriptions Manager, Daily Expense Logger & Validation, Custom Category Modal, Room/Firestore Persistence), `AlarmManager` 9:00 AM Scheduled Reminders, and Google Sign-In & Sign-Up Integration via Android Credential Manager.
-- **T.C. Dahanayaka** (`IT23746978`) — Clarity Financial Dashboard (Committed vs. Discretionary Spending Visualizer), Spending Analytics (Donut Breakdown & Top Expenses), Dynamic Goal Engine (MacBook Pro M4 Progress Ring & Behavioral Impulse Checker), Add/Edit Goal Flow, and Settings & Edit Profile Management.
+- **K.H.G.A. Udaneth** (`IT23750210`) — Clarity Financial Dashboard (Committed vs. Discretionary Spending Visualizer), Spending Analytics (Donut Breakdown & Top Expenses), Dynamic Goal Engine (MacBook Pro M4 Progress Ring & Behavioral Impulse Checker), Add/Edit Goal Flow, and Settings & Edit Profile Management.
 
