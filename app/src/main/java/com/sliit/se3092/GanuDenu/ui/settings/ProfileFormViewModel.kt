@@ -6,8 +6,6 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import com.sliit.se3092.GanuDenu.data.auth.AuthRepository
 import com.sliit.se3092.GanuDenu.util.ImageUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,18 +34,6 @@ class ProfileFormViewModel @Inject constructor(
     private fun loadCurrentProfile() {
         viewModelScope.launch {
             val profile = repository.loadProfile()
-            val userId = auth.currentUser?.uid
-            var fetchedBase64 = ""
-
-            if (userId != null) {
-                try {
-                    val doc = FirebaseFirestore.getInstance().collection("users").document(userId).get().await()
-                    fetchedBase64 = doc.getString("profileImageBase64") ?: ""
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-
             if (profile != null) {
                 _uiState.update {
                     it.copy(
@@ -55,49 +41,40 @@ class ProfileFormViewModel @Inject constructor(
                         email = profile.email,
                         phone = profile.phone,
                         newPassword = "",
-                        confirmPassword = "",
-                        profileImageBase64 = fetchedBase64
+                        confirmPassword = ""
                     )
                 }
             }
         }
     }
 
+    // --- Local Image Handling ---
+
+    fun loadProfileImage(context: Context) {
+        val userId = auth.currentUser?.uid ?: return
+        val bitmap = ImageUtils.loadLocalProfileImage(context, userId)
+        _uiState.update { it.copy(profileImageBitmap = bitmap) }
+    }
 
     fun updateProfileImageFromUri(context: Context, uri: Uri) {
-        val base64Image = ImageUtils.uriToBase64(context, uri)
-        if (base64Image != null) saveImageToFirestore(base64Image)
-    }
-
-    fun updateProfileImageFromBitmap(bitmap: Bitmap) {
-        val base64Image = ImageUtils.bitmapToBase64(bitmap)
-        saveImageToFirestore(base64Image)
-    }
-
-    fun removeProfileImage() {
-        saveImageToFirestore("")
-    }
-
-    private fun saveImageToFirestore(base64Image: String) {
         val userId = auth.currentUser?.uid ?: return
-
-        // Update UI immediately and close the bottom sheet
-        _uiState.update {
-            it.copy(profileImageBase64 = base64Image, showPhotoBottomSheet = false)
-        }
-
-        viewModelScope.launch {
-            try {
-                val data = mapOf("profileImageBase64" to base64Image)
-                FirebaseFirestore.getInstance()
-                    .collection("users")
-                    .document(userId)
-                    .set(data, SetOptions.merge())
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+        val bitmap = ImageUtils.saveUriToLocal(context, uri, userId)
+        _uiState.update { it.copy(profileImageBitmap = bitmap, showPhotoBottomSheet = false) }
     }
+
+    fun updateProfileImageFromBitmap(context: Context, bitmap: Bitmap) {
+        val userId = auth.currentUser?.uid ?: return
+        val savedBitmap = ImageUtils.saveBitmapToLocal(context, bitmap, userId)
+        _uiState.update { it.copy(profileImageBitmap = savedBitmap, showPhotoBottomSheet = false) }
+    }
+
+    fun removeProfileImage(context: Context) {
+        val userId = auth.currentUser?.uid ?: return
+        ImageUtils.removeLocalProfileImage(context, userId)
+        _uiState.update { it.copy(profileImageBitmap = null, showPhotoBottomSheet = false) }
+    }
+
+    // --- Profile Editing ---
 
     fun updateName(name: String) = _uiState.update { it.copy(name = name) }
     fun updatePhone(phone: String) = _uiState.update { it.copy(phone = phone) }
@@ -127,7 +104,7 @@ class ProfileFormViewModel @Inject constructor(
                 _uiState.update { it.copy(showSuccessSnackbar = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = e.message ?: "Failed to save profile. Check connection.") }
+                _uiState.update { it.copy(errorMessage = e.message ?: "Failed to save profile.") }
                 delay(4000)
                 _uiState.update { it.copy(errorMessage = null) }
             }

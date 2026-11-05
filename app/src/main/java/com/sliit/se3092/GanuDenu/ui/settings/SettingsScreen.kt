@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import com.sliit.se3092.GanuDenu.ui.theme.BorderGray
 import com.sliit.se3092.GanuDenu.ui.theme.DangerRed
 import com.sliit.se3092.GanuDenu.ui.theme.SurfaceDark
@@ -37,6 +39,11 @@ fun SettingsScreen(
     onLogout: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProfileImage(context)
+    }
 
     Scaffold(
         containerColor = ThemeBlack
@@ -130,24 +137,24 @@ private fun SettingsContent(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(ThemeYellow, CircleShape)
+                        .background(if (state.profileImageBitmap == null) ThemeYellow else Color.Transparent, CircleShape)
                         .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (state.profileImageBase64.isNotEmpty()) {
-                        val bitmap = com.sliit.se3092.GanuDenu.util.ImageUtils.base64ToBitmap(state.profileImageBase64)
-                        if (bitmap != null) {
-                            androidx.compose.foundation.Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                            )
-                        } else {
-                            Text(text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?", color = ThemeBlack, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        }
+                    if (state.profileImageBitmap != null) {
+                        androidx.compose.foundation.Image(
+                            bitmap = state.profileImageBitmap.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
                     } else {
-                        Text(text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?", color = ThemeBlack, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                            color = ThemeBlack,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.width(16.dp))
