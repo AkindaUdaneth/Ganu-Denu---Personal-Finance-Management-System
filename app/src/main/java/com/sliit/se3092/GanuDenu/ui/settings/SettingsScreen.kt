@@ -129,15 +129,25 @@ private fun SettingsContent(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(ThemeYellow, CircleShape),
+                        .background(ThemeYellow, CircleShape)
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                        color = ThemeBlack,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (state.profileImageBase64.isNotEmpty()) {
+                        val bitmap = com.sliit.se3092.GanuDenu.util.ImageUtils.base64ToBitmap(state.profileImageBase64)
+                        if (bitmap != null) {
+                            androidx.compose.foundation.Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        } else {
+                            Text(text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?", color = ThemeBlack, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        Text(text = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?", color = ThemeBlack, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {

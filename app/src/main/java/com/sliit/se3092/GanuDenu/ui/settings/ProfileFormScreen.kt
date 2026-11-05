@@ -1,6 +1,11 @@
 package com.sliit.se3092.GanuDenu.ui.settings
 
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +19,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -22,7 +28,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -31,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sliit.se3092.GanuDenu.util.ImageUtils
 
 private val ThemeBlack = Color(0xFF000000)
 private val ThemeYellow = Color(0xFFFFEF00)
@@ -44,6 +55,15 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val sheetState = rememberModalBottomSheetState()
+    val context = LocalContext.current
+
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { viewModel.updateProfileImageFromUri(context, it) }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
+        bitmap?.let { viewModel.updateProfileImageFromBitmap(it) }
+    }
 
     LaunchedEffect(state.showSuccessSnackbar, state.errorMessage) {
         if (state.showSuccessSnackbar) {
@@ -105,7 +125,9 @@ fun ProfileFormScreen(viewModel: ProfileFormViewModel, onCloseClick: () -> Unit 
                     dragHandle = { BottomSheetDefaults.DragHandle(color = BorderGray) }
                 ) {
                     PhotoBottomSheetContent(
-                        onDismiss = { viewModel.updatePhotoBottomSheetVisibility(false) }
+                        onCameraClick = { cameraLauncher.launch(null) },
+                        onGalleryClick = { galleryLauncher.launch("image/*") },
+                        onRemoveClick = { viewModel.removeProfileImage() }
                     )
                 }
             }
@@ -150,7 +172,25 @@ private fun ProfileFormContent(
                 modifier = Modifier
                     .size(96.dp)
                     .background(Color(0xFF27272A), CircleShape)
-            )
+                    .clip(CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (state.profileImageBase64.isNotEmpty()) {
+                    val bitmap = ImageUtils.base64ToBitmap(state.profileImageBase64)
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                    }
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                }
+            }
             OutlinedButton(
                 onClick = onChangePhotoClick,
                 border = BorderStroke(1.dp, Color.White),
@@ -163,14 +203,8 @@ private fun ProfileFormContent(
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            GanuDenuExternalLabelTextField(
-                value = state.name,
-                onValueChange = onNameChange,
-                label = "Name",
-                keyboardType = KeyboardType.Text
-            )
+            GanuDenuExternalLabelTextField(value = state.name, onValueChange = onNameChange, label = "Name", keyboardType = KeyboardType.Text)
 
-            // Fix: Use 'state.phone' instead of 'uiState.phone' and 'onPhoneChange' instead of 'viewModel::updatePhone'
             OutlinedTextField(
                 value = state.phone,
                 onValueChange = onPhoneChange,
@@ -178,49 +212,25 @@ private fun ProfileFormContent(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = ThemeBlack,
-                    unfocusedContainerColor = ThemeBlack,
-                    focusedBorderColor = BorderGray,
-                    unfocusedBorderColor = BorderGray,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    focusedContainerColor = ThemeBlack, unfocusedContainerColor = ThemeBlack,
+                    focusedBorderColor = BorderGray, unfocusedBorderColor = BorderGray,
+                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
                     cursorColor = ThemeYellow
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
             )
 
-            GanuDenuExternalLabelTextField(
-                value = state.email,
-                onValueChange = onEmailChange,
-                label = "Email",
-                keyboardType = KeyboardType.Email
-            )
-
-            GanuDenuExternalLabelTextField(
-                value = state.newPassword,
-                onValueChange = onNewPasswordChange,
-                label = "New Password",
-                keyboardType = KeyboardType.Password,
-                isPassword = true
-            )
-
-            GanuDenuExternalLabelTextField(
-                value = state.confirmPassword,
-                onValueChange = onConfirmPasswordChange,
-                label = "Re-enter the New Password",
-                keyboardType = KeyboardType.Password,
-                isPassword = true
-            )
+            GanuDenuExternalLabelTextField(value = state.email, onValueChange = onEmailChange, label = "Email", keyboardType = KeyboardType.Email)
+            GanuDenuExternalLabelTextField(value = state.newPassword, onValueChange = onNewPasswordChange, label = "New Password", keyboardType = KeyboardType.Password, isPassword = true)
+            GanuDenuExternalLabelTextField(value = state.confirmPassword, onValueChange = onConfirmPasswordChange, label = "Re-enter the New Password", keyboardType = KeyboardType.Password, isPassword = true)
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = onSaveClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
+            modifier = Modifier.fillMaxWidth().height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = ThemeYellow),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -230,33 +240,17 @@ private fun ProfileFormContent(
 }
 
 @Composable
-private fun PhotoBottomSheetContent(onDismiss: () -> Unit) {
+private fun PhotoBottomSheetContent(
+    onCameraClick: () -> Unit,
+    onGalleryClick: () -> Unit,
+    onRemoveClick: () -> Unit
+) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 32.dp)
+        modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
     ) {
-        BottomSheetRow(
-            icon = Icons.Default.CameraAlt,
-            text = "Take a photo",
-            textColor = Color.White,
-            iconColor = Color.LightGray,
-            onClick = onDismiss
-        )
-        BottomSheetRow(
-            icon = Icons.Default.PhotoLibrary,
-            text = "Choose from gallery",
-            textColor = Color.White,
-            iconColor = Color.LightGray,
-            onClick = onDismiss
-        )
-        BottomSheetRow(
-            icon = Icons.Default.Delete,
-            text = "Remove photo",
-            textColor = DangerRed,
-            iconColor = DangerRed,
-            onClick = onDismiss
-        )
+        BottomSheetRow(icon = Icons.Default.CameraAlt, text = "Take a photo", textColor = Color.White, iconColor = Color.LightGray, onClick = onCameraClick)
+        BottomSheetRow(icon = Icons.Default.PhotoLibrary, text = "Choose from gallery", textColor = Color.White, iconColor = Color.LightGray, onClick = onGalleryClick)
+        BottomSheetRow(icon = Icons.Default.Delete, text = "Remove photo", textColor = DangerRed, iconColor = DangerRed, onClick = onRemoveClick)
     }
 }
 
@@ -309,23 +303,5 @@ private fun GanuDenuExternalLabelTextField(
             ),
             singleLine = true
         )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 850)
-@Composable
-private fun ProfileFormPreview() {
-    val mockState = ProfileFormUiState(
-        name = "Kavindu",
-        email = "kavindu123@gmail.com",
-        phone = "0712345678",
-        newPassword = "password123",
-        confirmPassword = "password123"
-    )
-
-    Scaffold(containerColor = ThemeBlack) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            ProfileFormContent(mockState, {}, {}, {}, {}, {}, {}, {}, {})
-        }
     }
 }

@@ -9,4 +9,5 @@ data class ProfileFormUiState(
     val showSuccessSnackbar: Boolean = false,
     val errorMessage: String? = null,
     val showPhotoBottomSheet: Boolean = false
+    val profileImageBase64: String = ""
 )
