@@ -26,3 +26,11 @@ val PureWhite = Color(0xFFFFFFFF)
 val CommittedRed = Color(0xFFFF5252)
 val DiscretionaryOrange = Color(0xFFFFAB40)
 val SuccessGreen = Color(0xFF69F0AE)
+
+// --- Added for Profile, Settings, and Dashboard Screens ---
+val ThemeBlack = PureBlack // 0xFF000000
+val ThemeYellow = CanaryYellow // 0xFFFFEF00
+val SurfaceDark = Color(0xFF18181B)
+val BorderGray = Color(0xFF3F3F46)
+val DangerRed = Color(0xFFEF4444)
+
