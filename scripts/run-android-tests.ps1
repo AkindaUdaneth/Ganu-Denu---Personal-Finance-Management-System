@@ -1,3 +1,5 @@
+param([string]$TestClass = '')
+
 $ErrorActionPreference = 'Stop'
 Push-Location (Split-Path -Parent $PSScriptRoot)
 try {
@@ -6,7 +8,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Could not install the debug APK.' }
     & $adbPath install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
     if ($LASTEXITCODE -ne 0) { throw 'Could not install the Android test APK.' }
-    $result = & $adbPath shell am instrument -w -r -e firebaseEmulators true com.sliit.se3092.ganudenu.test/androidx.test.runner.AndroidJUnitRunner 2>&1
+    $instrumentArgs = @('shell', 'am', 'instrument', '-w', '-r', '-e', 'firebaseEmulators', 'true')
+    if ($TestClass) { $instrumentArgs += @('-e', 'class', $TestClass) }
+    $instrumentArgs += 'com.sliit.se3092.ganudenu.test/androidx.test.runner.AndroidJUnitRunner'
+    $result = & $adbPath @instrumentArgs 2>&1
     $exitCode = $LASTEXITCODE
     New-Item -ItemType Directory -Path scripts/temp -Force | Out-Null
     $result | Set-Content scripts/temp/android-tests.log
