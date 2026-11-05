@@ -4,6 +4,8 @@ import com.sliit.se3092.GanuDenu.data.income.*
 import com.sliit.se3092.GanuDenu.ui.income.IncomeViewModel
 import com.sliit.se3092.GanuDenu.ui.income.incomeError
 import com.google.firebase.firestore.FirebaseFirestoreException
+import androidx.lifecycle.SavedStateHandle
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlinx.coroutines.Dispatchers
@@ -135,6 +137,69 @@ class IncomeViewModelTest {
         assertTrue(repository.saved.isEmpty())
     }
 
+    @Test fun timeoutThenRetryKeepsOneDocumentAndTheOriginalDate() = runTest(dispatcher) {
+        val vm = IncomeViewModel(repository)
+        runCurrent()
+        vm.openLogger()
+        vm.editDraft { it.copy(amount = "250", date = "2025-12-31") }
+        val id = vm.uiState.value.draft!!.id
+        repository.acknowledgementDelayMillis = 30_000
+        vm.save()
+        runCurrent()
+        advanceTimeBy(25_001)
+        runCurrent()
+        assertFalse(vm.uiState.value.saving)
+        assertEquals(id, vm.uiState.value.draft?.id)
+        assertTrue(vm.uiState.value.formError!!.contains("may still sync"))
+        assertEquals(1, repository.saved.size)
+        repository.acknowledgementDelayMillis = 0
+        vm.save()
+        runCurrent()
+        assertEquals(setOf(id), repository.saved.keys)
+        assertEquals(LocalDate.of(2025, 12, 31), repository.saved[id]?.date)
+    }
+
+    @Test fun recreatedViewModelRestoresTheMonthAndEntireDraft() = runTest(dispatcher) {
+        val handle = SavedStateHandle()
+        val vm = IncomeViewModel(repository, handle)
+        runCurrent()
+        vm.selectMonth(YearMonth.of(2025, 12))
+        vm.openLogger(IncomeSource.FREELANCE)
+        vm.editDraft { it.copy(amount = "123.45", date = "2025-12-31",
+            frequency = IncomeFrequency.YEARLY, status = IncomeStatus.ESTIMATED) }
+        val draft = vm.uiState.value.draft
+        val restoredHandle = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+        val restored = IncomeViewModel(repository, restoredHandle)
+        runCurrent()
+        restored.refreshMonth()
+        assertEquals(YearMonth.of(2025, 12), restored.uiState.value.month)
+        assertEquals(draft, restored.uiState.value.draft)
+        assertFalse(restored.uiState.value.saving)
+        restored.dismissLogger()
+        val cleared = IncomeViewModel(repository, SavedStateHandle(restoredHandle.keys().associateWith { restoredHandle.get<Any?>(it) }))
+        runCurrent()
+        assertNull(cleared.uiState.value.draft)
+        assertNull(restored.uiState.value.draft)
+    }
+
+    @Test fun januaryAndDecemberUseSeparateSubscriptions() = runTest(dispatcher) {
+        val december = YearMonth.of(2025, 12)
+        val january = YearMonth.of(2026, 1)
+        repository.monthEvents[december] = MutableStateFlow(IncomeSnapshot(listOf(entry(100))))
+        repository.monthEvents[january] = MutableStateFlow(IncomeSnapshot(listOf(entry(200))))
+        val vm = IncomeViewModel(repository)
+        runCurrent()
+        vm.selectMonth(december)
+        runCurrent()
+        assertEquals(100L, vm.uiState.value.summary.confirmedMinor)
+        vm.selectMonth(january)
+        runCurrent()
+        assertEquals(200L, vm.uiState.value.summary.confirmedMinor)
+        repository.monthEvents[december]!!.value = IncomeSnapshot(listOf(entry(999)))
+        runCurrent()
+        assertEquals(200L, vm.uiState.value.summary.confirmedMinor)
+    }
+
     private fun entry(minor: Long) = IncomeEntry("1", IncomeSource.SALARY, IncomeStatus.CONFIRMED,
         "250", IncomeCurrency.LKR, "1", minor, LocalDate.now(), "")
 }
@@ -142,6 +207,7 @@ class IncomeViewModelTest {
 private class FakeIncomeRepository : IncomeRepository {
     val events = MutableStateFlow(IncomeSnapshot())
     val monthEvents = mutableMapOf<YearMonth, MutableStateFlow<IncomeSnapshot>>()
+    var acknowledgementDelayMillis = 0L
     var fail = false
     var attempts = 0
     var signInRequired = false
@@ -152,5 +218,6 @@ private class FakeIncomeRepository : IncomeRepository {
         if (signInRequired) throw IncomeSignInRequiredException()
         if (fail) error("Network unavailable")
         saved[entry.id] = entry
+        delay(acknowledgementDelayMillis)
     }
 }

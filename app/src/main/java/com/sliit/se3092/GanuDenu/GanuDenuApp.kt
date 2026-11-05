@@ -29,7 +29,7 @@ class GanuDenuApp : Application() {
                 single<IncomeRepository> { FirestoreIncomeRepository(get(), get()) }
                 viewModel { AuthViewModel(get()) }
                 viewModel { SettingsViewModel(get()) }
-                viewModel { IncomeViewModel(get()) }
+                viewModel { IncomeViewModel(get(), get()) }
             })
         }
     }

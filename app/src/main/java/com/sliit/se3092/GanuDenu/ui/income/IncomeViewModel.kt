@@ -1,6 +1,7 @@
 package com.sliit.se3092.GanuDenu.ui.income
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.sliit.se3092.GanuDenu.data.income.*
@@ -28,11 +29,19 @@ data class IncomeUiState(
     val message: String? = null
 )
 
-class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
-    private val _uiState = MutableStateFlow(IncomeUiState())
+class IncomeViewModel(
+    private val repository: IncomeRepository,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+) : ViewModel() {
+    private var followsCurrentMonth = savedStateHandle.get<Boolean>("income_follows_current_month") ?: true
+    private val restoredMonth = savedStateHandle.get<String>("income_month")?.let(YearMonth::parse)
+    private val _uiState = MutableStateFlow(IncomeUiState(
+        month = if (followsCurrentMonth) YearMonth.now() else restoredMonth ?: YearMonth.now(),
+        draft = savedStateHandle["income_draft"],
+        message = savedStateHandle["income_message"]
+    ))
     val uiState = _uiState.asStateFlow()
     private var observation: Job? = null
-    private var followsCurrentMonth = true
 
     init { retry() }
 
@@ -60,11 +69,14 @@ class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
 
     fun selectMonth(month: YearMonth) {
         followsCurrentMonth = month == YearMonth.now()
+        savedStateHandle["income_follows_current_month"] = followsCurrentMonth
         showMonth(month)
     }
 
     private fun showMonth(month: YearMonth) {
         if (_uiState.value.month == month) return
+        savedStateHandle["income_month"] = month.toString()
+        savedStateHandle["income_message"] = null
         observation?.cancel()
         val emptySummary = IncomeSummary.from(emptyList())
         _uiState.update {
@@ -78,13 +90,19 @@ class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
 
     fun openLogger(source: IncomeSource = IncomeSource.SALARY) {
         if (_uiState.value.saving) return
-        _uiState.update { it.copy(draft = IncomeDraft(UUID.randomUUID().toString(), source), formError = null, message = null) }
+        savedStateHandle["income_message"] = null
+        setDraft(IncomeDraft(UUID.randomUUID().toString(), source))
+        _uiState.update { it.copy(message = null) }
     }
 
-    fun dismissLogger() { if (!_uiState.value.saving) _uiState.update { it.copy(draft = null, formError = null) } }
+    fun dismissLogger() { if (!_uiState.value.saving) setDraft(null) }
     fun editDraft(transform: (IncomeDraft) -> IncomeDraft) {
         if (_uiState.value.saving) return
-        _uiState.update { it.copy(draft = it.draft?.let(transform), formError = null) }
+        setDraft(_uiState.value.draft?.let(transform))
+    }
+    private fun setDraft(draft: IncomeDraft?) {
+        savedStateHandle["income_draft"] = draft
+        _uiState.update { it.copy(draft = draft, formError = null) }
     }
     fun selectSource(source: IncomeSource) = editDraft { it.copy(source = source) }
 
@@ -100,8 +118,10 @@ class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
             try {
                 withTimeout(25_000) { repository.save(entry) }
                 val inMonth = YearMonth.from(entry.date) == state.month
-                _uiState.update { it.copy(saving = false, draft = null,
-                    message = if (inMonth) "Income saved." else "Income saved for ${YearMonth.from(entry.date)}. This dashboard shows ${state.month}.") }
+                val message = if (inMonth) "Income saved." else "Income saved for ${YearMonth.from(entry.date)}. This dashboard shows ${state.month}."
+                savedStateHandle["income_draft"] = null
+                savedStateHandle["income_message"] = message
+                _uiState.update { it.copy(saving = false, draft = null, message = message) }
             } catch (exception: Exception) {
                 if (exception is CancellationException && exception !is TimeoutCancellationException) throw exception
                 _uiState.update { it.copy(saving = false, formError = if (exception is TimeoutCancellationException)
@@ -110,7 +130,10 @@ class IncomeViewModel(private val repository: IncomeRepository) : ViewModel() {
             }
         }
     }
-    fun dismissMessage() = _uiState.update { it.copy(message = null) }
+    fun dismissMessage() {
+        savedStateHandle["income_message"] = null
+        _uiState.update { it.copy(message = null) }
+    }
 }
 
 internal fun incomeError(exception: Exception): String = when (exception) {
