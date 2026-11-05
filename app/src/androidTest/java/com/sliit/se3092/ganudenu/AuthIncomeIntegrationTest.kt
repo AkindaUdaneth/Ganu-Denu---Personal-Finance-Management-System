@@ -69,9 +69,18 @@ class AuthIncomeIntegrationTest {
             assertEquals("income.tester@example.com", auth.profile?.email)
         }
         compose.onNodeWithText("Settings").performClick()
-        // Settings uses Hilt's Firebase repository, so it offers its fallback sign-out action
-        // when the test's fake account has no Firebase session.
-        compose.onNodeWithText("Sign out").performClick()
+        // Settings can show its normal or failed-profile sign-out path, depending on the
+        // host activity's Firebase session. Both must end the fake finance session.
+        compose.waitUntil(30_000) {
+            compose.onAllNodesWithText("Sign out").fetchSemanticsNodes().isNotEmpty() ||
+                compose.onAllNodesWithText("Log Out").fetchSemanticsNodes().isNotEmpty()
+        }
+        if (compose.onAllNodesWithText("Sign out").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Sign out").performClick()
+        } else {
+            compose.onNodeWithText("Log Out").performScrollTo().performClick()
+            compose.onAllNodesWithText("Log Out").filter(hasClickAction()).onLast().performClick()
+        }
         compose.onNodeWithText("Welcome back").assertIsDisplayed()
         compose.onNodeWithText("Income Dashboard").assertDoesNotExist()
         compose.runOnIdle { assertNull(auth.currentIdentity) }
@@ -99,6 +108,7 @@ private class IntegrationAuthRepository : AuthRepository {
     var profile: UserProfile? = null
     override suspend fun signIn(email: String, password: String) { identities.value = AuthIdentity("integration-uid", email) }
     override suspend fun register(email: String, password: String) = signIn(email, password)
+    override suspend fun signInWithGoogle(idToken: String) = Unit
     override suspend fun loadProfile() = profile
     override suspend fun createProfile(name: String, phone: String): UserProfile {
         val identity = requireNotNull(currentIdentity)

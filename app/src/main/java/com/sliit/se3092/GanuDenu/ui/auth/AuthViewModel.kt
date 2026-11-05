@@ -86,7 +86,11 @@ class AuthViewModel(
                 handledUid = repository.currentIdentity?.uid
                 _uiState.update { it.copy(
                     busy = false,
-                    session = if (hasAccount) AuthSession.NEEDS_PROFILE else AuthSession.SIGNED_OUT,
+                    session = when {
+                        !hasAccount -> AuthSession.SIGNED_OUT
+                        needsDetails -> AuthSession.NEEDS_PROFILE
+                        else -> AuthSession.ERROR
+                    },
                     password = if (hasAccount) "" else it.password,
                     error = if (hasAccount) "Your account is signed in, but we could not load or save your profile. Check your connection and retry. ${friendlyError(exception)}" else friendlyError(exception)
                 ) }
@@ -136,7 +140,8 @@ class AuthViewModel(
                 handledUid = repository.currentIdentity?.uid
                 _uiState.update { it.copy(
                     busy = false,
-                    session = if (hasAccount && isSignUp) AuthSession.NEEDS_PROFILE else AuthSession.SIGNED_OUT,
+                    session = if (hasAccount) AuthSession.ERROR else AuthSession.SIGNED_OUT,
+                    password = "",
                     error = friendlyError(exception)
                 ) }
             }

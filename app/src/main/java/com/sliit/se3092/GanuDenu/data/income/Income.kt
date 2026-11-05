@@ -46,7 +46,7 @@ data class IncomeDraft(
     val date: String = LocalDate.now().toString(),
     val note: String = "",
     val frequency: IncomeFrequency = IncomeFrequency.MONTHLY
-)
+) : java.io.Serializable
 
 object IncomeValidation {
     fun toEntry(draft: IncomeDraft): IncomeEntry {
