@@ -8,7 +8,8 @@ sealed interface SettingsUiState {
         val userEmail: String,
         val notificationsEnabled: Boolean,
         val showLogoutDialog: Boolean,
-        val showDeleteDialog: Boolean
+        val showDeleteDialog: Boolean,
+        val profileImageBase64: String = ""
     ) : SettingsUiState
 
     data class Error(val message: String) : SettingsUiState

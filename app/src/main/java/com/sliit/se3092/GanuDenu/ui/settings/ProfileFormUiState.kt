@@ -8,5 +8,6 @@ data class ProfileFormUiState(
     val confirmPassword: String = "",
     val showSuccessSnackbar: Boolean = false,
     val errorMessage: String? = null,
-    val showPhotoBottomSheet: Boolean = false
+    val showPhotoBottomSheet: Boolean = false,
+    val profileImageBase64: String = ""
 )

@@ -27,8 +27,11 @@ class GanuDenuApp : Application() {
                 single { FirebaseFirestore.getInstance() }
                 single<AuthRepository> { FirebaseAuthRepository(get(), get()) }
                 single<IncomeRepository> { FirestoreIncomeRepository(get(), get()) }
+
                 viewModel { AuthViewModel(get()) }
-                viewModel { SettingsViewModel(get()) }
+
+                viewModel { SettingsViewModel(get(), get()) }
+
                 viewModel { IncomeViewModel(get(), get()) }
             })
         }
